@@ -86,11 +86,138 @@
   async function fetchProfile(userId) {
     const { data, error } = await client
       .from('profiles')
-      .select('id, username, email, photo, coeurs')
+      .select('id, username, email, photo, coeurs, country, region, age, children')
       .eq('id', userId)
       .maybeSingle();
     if (error) throw new Error(error.message);
     return data;
+  }
+
+  function isProfileSetupComplete(row) {
+    if (!row) return false;
+    return !!(
+      row.username?.trim() &&
+      row.photo?.trim() &&
+      row.country?.trim() &&
+      row.region?.trim() &&
+      row.age != null &&
+      row.age >= 16 &&
+      row.children?.trim()
+    );
+  }
+
+  async function isCurrentProfileComplete() {
+    const session = await getSession();
+    if (!session?.user) return false;
+    try {
+      await ensureUserProfile(session.user.id);
+    } catch {
+      /* continue */
+    }
+    const profile = await fetchProfile(session.user.id);
+    return isProfileSetupComplete(profile);
+  }
+
+  async function getPostAuthRedirect(fallback) {
+    const complete = await isCurrentProfileComplete();
+    if (!complete) return 'completer-profil.html';
+    return fallback || 'compte.html';
+  }
+
+  function compressPhotoFile(file) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const objectUrl = URL.createObjectURL(file);
+      img.onload = () => {
+        const maxWidth = 800;
+        const scale = Math.min(1, maxWidth / img.width);
+        const width = Math.max(1, Math.round(img.width * scale));
+        const height = Math.max(1, Math.round(img.height * scale));
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          URL.revokeObjectURL(objectUrl);
+          reject(new Error('Impossible de traiter la photo.'));
+          return;
+        }
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => {
+            URL.revokeObjectURL(objectUrl);
+            if (!blob) {
+              reject(new Error('Compression de la photo impossible.'));
+              return;
+            }
+            resolve(new File([blob], 'photo.jpg', { type: 'image/jpeg' }));
+          },
+          'image/jpeg',
+          0.85,
+        );
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error('Fichier image invalide.'));
+      };
+      img.src = objectUrl;
+    });
+  }
+
+  async function uploadProfilePhoto(userId, file) {
+    const compressed = await compressPhotoFile(file);
+    const storagePath = `${userId}_quiz_avatar_${Date.now()}.jpeg`;
+    const { error } = await client.storage.from('profiles').upload(storagePath, compressed, {
+      contentType: 'image/jpeg',
+      upsert: true,
+    });
+    if (error) throw new Error(error.message || 'Échec de l’envoi de la photo.');
+    const { data } = client.storage.from('profiles').getPublicUrl(storagePath);
+    if (!data?.publicUrl) throw new Error('URL de photo introuvable.');
+    return data.publicUrl;
+  }
+
+  async function saveProfileSetup(input) {
+    const session = await getSession();
+    if (!session?.user) throw new Error('Session expirée. Reconnectez-vous.');
+
+    const userId = session.user.id;
+    await ensureUserProfile(userId);
+
+    if (!input.photoFile) throw new Error('Ajoutez une photo pour continuer.');
+
+    const country = String(input.country || '').trim();
+    const region = String(input.region || '').trim();
+    const age = parseInt(String(input.age), 10);
+    const children = String(input.children || '').trim();
+
+    if (!country) throw new Error('Sélectionnez votre pays.');
+    if (!region) throw new Error('Sélectionnez votre région.');
+    if (!Number.isFinite(age) || age < 16 || age > 70) {
+      throw new Error('Indiquez un âge entre 16 et 70 ans.');
+    }
+    if (!children) throw new Error('Indiquez le nombre d’enfants.');
+
+    const photoUrl = await uploadProfilePhoto(userId, input.photoFile);
+    const username = await resolveAvailableUsername(session.user.user_metadata?.username || 'Maman', userId);
+
+    const { error } = await client.from('profiles').upsert(
+      {
+        id: userId,
+        username,
+        email: session.user.email ?? null,
+        photo: photoUrl,
+        country,
+        region,
+        age,
+        children,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'id' },
+    );
+
+    if (error) throw new Error(error.message || 'Impossible d’enregistrer le profil.');
+    return { photoUrl, username };
   }
 
   async function signIn(email, password) {
@@ -230,6 +357,10 @@
     signOut,
     getSession,
     getCurrentProfile,
+    isProfileSetupComplete,
+    isCurrentProfileComplete,
+    getPostAuthRedirect,
+    saveProfileSetup,
     renderAvatar,
     getAvatarInitial,
     onAuthStateChange: (cb) => client.auth.onAuthStateChange(cb),

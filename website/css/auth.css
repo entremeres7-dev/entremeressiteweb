@@ -386,3 +386,128 @@ body.is-logged-in a.auth-user__name {
   .auth-user__name { display: none; }
   body.is-logged-in .main-nav .member-only { display: none !important; }
 }
+
+/* Compléter le profil */
+.profile-setup-page .auth-main {
+  align-items: flex-start;
+}
+
+.profile-setup-main {
+  padding-bottom: 4rem;
+}
+
+.auth-card--wide {
+  width: min(100%, 520px);
+}
+
+.profile-setup-pseudo {
+  text-align: center;
+  color: var(--pink);
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin: -0.25rem 0 0.75rem;
+}
+
+.profile-setup-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin: 0.5rem 0 0.65rem;
+}
+
+.profile-photo-picker {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.profile-photo-btn {
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.profile-photo-placeholder {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+  background: var(--bg-card);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.profile-photo-icon {
+  font-size: 1.75rem;
+  line-height: 1;
+}
+
+.profile-photo-preview {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--pink);
+  display: block;
+}
+
+.profile-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.profile-chip {
+  padding: 0.55rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #111;
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.profile-chip--compact {
+  min-width: 3rem;
+  text-align: center;
+}
+
+.profile-chip.is-active {
+  background: var(--pink);
+  border-color: var(--pink);
+  color: #fff;
+}
+
+.profile-chip:hover {
+  border-color: var(--pink);
+}
+
+.auth-field select {
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #111;
+  color: #fff;
+  font-size: 1rem;
+  width: 100%;
+}
+
+.auth-field select:focus {
+  outline: 2px solid var(--pink);
+  border-color: transparent;
+}
+
+.auth-field select:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

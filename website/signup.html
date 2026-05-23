@@ -70,7 +70,8 @@
 
       const session = await EntreMeresAuth.getSession();
       if (session) {
-        window.location.replace('compte.html');
+        const target = await EntreMeresAuth.getPostAuthRedirect('compte.html');
+        window.location.replace(target);
         return;
       }
 
@@ -112,7 +113,7 @@
         }
 
         if (signedIn) {
-          window.location.href = 'compte.html';
+          window.location.href = 'completer-profil.html';
         } else {
           window.location.href = 'login.html?email=' + encodeURIComponent(email);
         }

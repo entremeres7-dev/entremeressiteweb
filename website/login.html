@@ -58,7 +58,8 @@
 
       const session = await EntreMeresAuth.getSession();
       if (session) {
-        window.location.replace('compte.html');
+        const target = await EntreMeresAuth.getPostAuthRedirect('compte.html');
+        window.location.replace(target);
         return;
       }
 
@@ -84,8 +85,9 @@
           return;
         }
 
-        const redirect = params.get('redirect') || 'compte.html';
-        window.location.href = redirect;
+        const redirectParam = params.get('redirect');
+        const target = await EntreMeresAuth.getPostAuthRedirect(redirectParam || 'compte.html');
+        window.location.href = target;
       });
     })();
   </script>

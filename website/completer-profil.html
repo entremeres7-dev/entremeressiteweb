@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Compléter votre profil — EntreMeres</title>
+  <link rel="icon" href="assets/favicon.png" type="image/png" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/auth.css" />
+</head>
+<body class="auth-page profile-setup-page">
+  <header class="site-header site-header--solid">
+    <div class="site-header__inner">
+      <a href="index.html" class="logo" aria-label="EntreMeres TV">
+        <span class="logo__brand">
+          <span class="logo__entre">Entre</span><span class="logo__meres">Meres</span>
+          <span class="logo__badge">TV</span>
+        </span>
+        <span class="logo__tagline">La plateforme des mamans</span>
+      </a>
+    </div>
+  </header>
+
+  <main class="auth-main profile-setup-main">
+    <div class="auth-card auth-card--wide profile-setup-card">
+      <h1 class="auth-card__title">Votre profil maman</h1>
+      <p class="profile-setup-pseudo" id="profile-setup-username">@Maman</p>
+      <p class="auth-card__subtitle">
+        Complétez votre profil pour rejoindre la communauté et rencontrer des mamans près de chez vous.
+        <strong>La photo est obligatoire.</strong>
+      </p>
+
+      <div class="auth-error" id="profile-setup-error" role="alert"></div>
+
+      <form id="profile-setup-form" novalidate>
+        <p class="profile-setup-label">Photo *</p>
+        <div class="profile-photo-picker">
+          <input type="file" id="profile-photo-input" accept="image/jpeg,image/png,image/webp" hidden required />
+          <button type="button" class="profile-photo-btn" id="profile-photo-btn" aria-label="Ajouter une photo">
+            <span class="profile-photo-placeholder" id="profile-photo-placeholder">
+              <span class="profile-photo-icon" aria-hidden="true">📷</span>
+              <span>Ajouter une photo</span>
+            </span>
+            <img id="profile-photo-preview" class="profile-photo-preview" alt="Aperçu de votre photo" hidden />
+          </button>
+        </div>
+
+        <p class="profile-setup-label">Pays *</p>
+        <div class="profile-chip-row" id="profile-country-chips" role="group" aria-label="Pays"></div>
+
+        <label class="auth-field" for="profile-region">
+          Région *
+          <select id="profile-region" name="region" required disabled>
+            <option value="">Choisissez d’abord un pays</option>
+          </select>
+        </label>
+
+        <label class="auth-field" for="profile-age">
+          Votre âge *
+          <input type="number" id="profile-age" name="age" min="16" max="70" required placeholder="Ex. 32" inputmode="numeric" />
+        </label>
+
+        <p class="profile-setup-label">Nombre d’enfants *</p>
+        <div class="profile-chip-row" id="profile-children-chips" role="group" aria-label="Nombre d'enfants"></div>
+
+        <button type="submit" class="btn btn--primary btn--lg auth-submit" id="profile-setup-submit">C’est parti</button>
+      </form>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/profile-setup-data.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/profile-setup.js"></script>
+  <script src="js/cookies.js"></script>
+</body>
+</html>

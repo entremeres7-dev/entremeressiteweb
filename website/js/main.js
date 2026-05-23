@@ -230,7 +230,8 @@
     }
 
     closeModal();
-    window.location.href = 'compte.html';
+    const target = await EntreMeresAuth.getPostAuthRedirect('compte.html');
+    window.location.href = target;
   });
 
   /* FAQ accordion */

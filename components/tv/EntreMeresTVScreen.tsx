@@ -5,6 +5,7 @@ import {
   StyleSheet,
   StatusBar,
   Alert,
+  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -111,12 +112,16 @@ export function EntreMeresTVScreen() {
     router.push('/(tabs)/profil');
   }, [router]);
 
+  const showTvHeader = Platform.OS !== 'web';
+
   return (
     <View style={styles.screen}>
       <StatusBar barStyle={isLight ? 'dark-content' : 'light-content'} backgroundColor={colors.bg} />
-      <View style={{ paddingTop: insets.top, backgroundColor: colors.bg }}>
-        <TvHeader onProfile={handleProfile} />
-      </View>
+      {showTvHeader ? (
+        <View style={{ paddingTop: insets.top, backgroundColor: colors.bg }}>
+          <TvHeader onProfile={handleProfile} />
+        </View>
+      ) : null}
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[

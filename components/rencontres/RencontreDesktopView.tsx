@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   Platform,
   useWindowDimensions,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import type { AppColors } from '@/constants/themes';
 import { cardElevation } from '@/constants/themeUtils';
@@ -19,6 +20,8 @@ import { RencontreFilterChips } from './RencontreFilterChips';
 import type { MamanRencontre, RencontreFilter } from '@/lib/rencontres/types';
 import { TAB_BAR_CLEARANCE } from '@/constants/tabBarLayout';
 import { NEW_MEMBER_DAYS } from '@/hooks/useRencontreProfiles';
+
+const FILTERS_EXPANDED_KEY = 'rencontres_filters_expanded';
 
 type Props = {
   colors: AppColors;
@@ -62,7 +65,31 @@ export function RencontreDesktopView({
   const styles = buildStyles(colors);
   const { width } = useWindowDimensions();
   const compact = width < 640;
+  const isNativeMobile = Platform.OS === 'ios' || Platform.OS === 'android';
+  const useCompactFilters = compact || isNativeMobile;
   const openHint = Platform.OS === 'web' ? 'cliquez sur une ligne' : 'appuyez sur une ligne';
+  const [filtersExpanded, setFiltersExpanded] = useState(false);
+
+  useEffect(() => {
+    AsyncStorage.getItem(FILTERS_EXPANDED_KEY).then((value) => {
+      if (value === '1') setFiltersExpanded(true);
+    });
+  }, []);
+
+  const toggleFilters = useCallback(() => {
+    setFiltersExpanded((prev) => {
+      const next = !prev;
+      AsyncStorage.setItem(FILTERS_EXPANDED_KEY, next ? '1' : '0').catch(() => {});
+      return next;
+    });
+  }, []);
+
+  const filterSummary = useMemo(() => {
+    const parts: string[] = [timeFilter === 'new' ? 'Récentes' : 'Toutes'];
+    if (selectedCountry) parts.push(selectedCountry);
+    if (selectedRegion) parts.push(selectedRegion);
+    return parts.join(' · ');
+  }, [timeFilter, selectedCountry, selectedRegion]);
 
   const emptyMessage =
     timeFilter === 'new'
@@ -94,20 +121,69 @@ export function RencontreDesktopView({
           </View>
         </View>
 
-        <View style={[styles.filterBar, compact && styles.filterBarCompact, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <RencontreFilterChips
-            colors={colors}
-            timeFilter={timeFilter}
-            onTimeFilterChange={onTimeFilterChange}
-            countries={countries}
-            regions={regions}
-            selectedCountry={selectedCountry}
-            selectedRegion={selectedRegion}
-            onCountryChange={onCountryChange}
-            onRegionChange={onRegionChange}
-            countLabel={countLabel}
-            layout="toolbar"
-          />
+        <View style={[styles.filterBar, useCompactFilters && styles.filterBarCompact, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <TouchableOpacity
+            style={[styles.filterToggle, useCompactFilters && styles.filterToggleCompact]}
+            onPress={toggleFilters}
+            activeOpacity={0.85}
+            hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+            accessibilityRole="button"
+            accessibilityState={{ expanded: filtersExpanded }}
+            accessibilityLabel={filtersExpanded ? 'Masquer les filtres' : 'Afficher les filtres'}
+          >
+            <View style={[styles.filterToggleLeft, useCompactFilters && styles.filterToggleLeftCompact]}>
+              <Ionicons name="options-outline" size={18} color={colors.pink} />
+              <Text style={[styles.filterToggleTitle, { color: colors.text }]}>
+                {filtersExpanded ? 'Masquer les filtres' : 'Filtres'}
+              </Text>
+              {!filtersExpanded && !useCompactFilters ? (
+                <Text style={[styles.filterToggleSummary, { color: colors.textMuted }]} numberOfLines={1}>
+                  {filterSummary}
+                </Text>
+              ) : null}
+            </View>
+            <View style={[styles.filterToggleRight, useCompactFilters && styles.filterToggleRightCompact]}>
+              {!filtersExpanded && !useCompactFilters ? (
+                <Text style={[styles.filterToggleCount, { color: colors.textSecondary }]} numberOfLines={1}>
+                  {countLabel}
+                </Text>
+              ) : null}
+              <Ionicons
+                name={filtersExpanded ? 'chevron-up' : 'chevron-down'}
+                size={18}
+                color={colors.textMuted}
+              />
+            </View>
+            {!filtersExpanded && useCompactFilters ? (
+              <View style={styles.filterToggleMeta}>
+                <Text style={[styles.filterToggleSummary, { color: colors.textMuted }]} numberOfLines={2}>
+                  {filterSummary}
+                </Text>
+                <Text style={[styles.filterToggleCount, { color: colors.textSecondary }]} numberOfLines={1}>
+                  {countLabel}
+                </Text>
+              </View>
+            ) : null}
+          </TouchableOpacity>
+
+          {filtersExpanded ? (
+            <View style={styles.filterPanel}>
+              <RencontreFilterChips
+                colors={colors}
+                timeFilter={timeFilter}
+                onTimeFilterChange={onTimeFilterChange}
+                countries={countries}
+                regions={regions}
+                selectedCountry={selectedCountry}
+                selectedRegion={selectedRegion}
+                onCountryChange={onCountryChange}
+                onRegionChange={onRegionChange}
+                countLabel={countLabel}
+                layout={useCompactFilters ? 'inline' : 'toolbar'}
+                wrapChips={useCompactFilters}
+              />
+            </View>
+          ) : null}
         </View>
 
         <View style={styles.listSection}>
@@ -209,12 +285,75 @@ function buildStyles(c: AppColors) {
       marginTop: 20,
       borderRadius: 16,
       borderWidth: StyleSheet.hairlineWidth,
-      padding: 16,
+      padding: 12,
       ...cardElevation(c.bg),
     },
     filterBarCompact: {
       marginTop: 16,
-      padding: 12,
+      padding: 10,
+    },
+    filterToggle: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 12,
+      minHeight: 44,
+    },
+    filterToggleCompact: {
+      flexWrap: 'wrap',
+      alignItems: 'flex-start',
+    },
+    filterToggleLeft: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      minWidth: 0,
+    },
+    filterToggleLeftCompact: {
+      flex: 1,
+      minWidth: '70%',
+    },
+    filterToggleTitle: {
+      fontSize: 14,
+      fontWeight: '700',
+      flexShrink: 0,
+    },
+    filterToggleSummary: {
+      flex: 1,
+      fontSize: 13,
+      minWidth: 0,
+    },
+    filterToggleRight: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      flexShrink: 0,
+      maxWidth: '42%',
+    },
+    filterToggleRightCompact: {
+      marginLeft: 'auto',
+      maxWidth: undefined,
+    },
+    filterToggleMeta: {
+      width: '100%',
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      justifyContent: 'space-between',
+      gap: 10,
+      paddingLeft: 26,
+    },
+    filterToggleCount: {
+      fontSize: 12,
+      fontWeight: '600',
+      textAlign: 'right',
+      flexShrink: 0,
+    },
+    filterPanel: {
+      marginTop: 14,
+      paddingTop: 14,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: c.border,
     },
     listSection: {
       marginTop: 24,
