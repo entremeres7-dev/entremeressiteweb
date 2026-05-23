@@ -1,5 +1,4 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { useColorScheme } from 'react-native';
 import type { AppColors, ThemeMode } from '@/constants/themes';
 import { THEMES } from '@/constants/themes';
 import { setGlobalColors } from '@/constants/themeStore';
@@ -17,18 +16,17 @@ type ThemeContextValue = {
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const systemScheme = useColorScheme();
   const [mode, setModeState] = useState<ThemeMode>('dark');
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     getThemeMode().then((saved) => {
-      const initial = saved ?? (systemScheme === 'light' ? 'light' : 'dark');
+      const initial = saved ?? 'dark';
       setGlobalColors(THEMES[initial]);
       setModeState(initial);
       setReady(true);
     });
-  }, [systemScheme]);
+  }, []);
 
   const setMode = useCallback(async (next: ThemeMode) => {
     setGlobalColors(THEMES[next]);
