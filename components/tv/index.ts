@@ -1,0 +1,1 @@
+export { EntreMeresTVScreen } from './EntreMeresTVScreen';

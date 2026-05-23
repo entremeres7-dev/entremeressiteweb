@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# Script simple pour générer un QR code
+# Usage: ./qr [IP_ADDRESS]
+
+cd "$(dirname "$0")"
+
+if [ -z "$1" ]; then
+  # Pas d'argument, utiliser le script Node.js qui détecte automatiquement
+  node generate-qr.js
+else
+  # IP fournie en argument
+  node generate-qr.js "$1"
+fi
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

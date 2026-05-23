@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="EntreMeres TV — Séries, documentaires et contenus mamans en streaming gratuitement." />
+  <title>EntreMeres TV : des séries et contenus mamans en streaming</title>
+  <link rel="icon" href="assets/favicon.png" type="image/png" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/auth.css" />
+</head>
+<body>
+  <a class="skip-link" href="#contenu">Aller au contenu principal</a>
+
+  <!-- Navigation TF1-style -->
+  <header class="site-header" id="top">
+    <div class="site-header__inner">
+      <a href="#top" class="logo" aria-label="EntreMeres TV — Accueil">
+        <span class="logo__brand">
+          <span class="logo__entre">Entre</span><span class="logo__meres">Meres</span>
+          <span class="logo__badge">TV</span>
+        </span>
+        <span class="logo__tagline">La plateforme des mamans</span>
+      </a>
+
+      <nav class="main-nav" aria-label="Navigation principale">
+        <a href="#casting" class="main-nav__link main-nav__link--casting">
+          Casting <span class="nav-pill">Ouvert</span>
+        </a>
+        <a href="partenariats.html" class="main-nav__link guest-only">Partenariats</a>
+        <a href="#" data-app-route="sos-maman" class="main-nav__link member-only">SOS Maman</a>
+        <a href="#" data-app-route="rencontrer" class="main-nav__link member-only">Rencontres</a>
+        <a href="#" data-app-route="profil" class="main-nav__link member-only">Profil</a>
+        <a href="signup.html" class="main-nav__link main-nav__link--badge guest-only">Ma liste</a>
+        <a href="#" data-app-route="ma-liste" class="main-nav__link main-nav__link--badge member-only">Ma liste</a>
+      </nav>
+
+      <div class="site-header__actions">
+        <button type="button" class="icon-btn" id="search-open-btn" aria-label="Rechercher" aria-controls="site-search">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/></svg>
+        </button>
+        <span class="lang-current" aria-label="Langue du site : Français">Français</span>
+        <div class="auth-guest" id="auth-guest">
+          <a href="login.html" class="btn btn--ghost btn--sm">S'identifier</a>
+          <a href="signup.html" class="btn btn--primary btn--sm">Rejoindre</a>
+        </div>
+        <div class="auth-user" id="auth-user" hidden>
+          <a href="compte.html" class="auth-user__avatar" id="auth-avatar" aria-label="Mon compte"><span class="auth-user__avatar-initial">M</span></a>
+          <a href="compte.html" class="auth-user__name"><span id="auth-username">Maman</span></a>
+          <button type="button" class="btn btn--ghost btn--sm" id="auth-logout">Déconnexion</button>
+        </div>
+        <button type="button" class="burger" aria-label="Menu" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero carousel TF1-style -->
+  <section class="spotlight" aria-label="Mise en avant">
+    <div class="spotlight__slides">
+      <article class="spotlight__slide spotlight__slide--active" data-slide="0">
+        <img src="assets/thumbs/couple-apres-bebe.png" alt="Couple après bébé" class="spotlight__bg" />
+        <div class="spotlight__overlay"></div>
+        <div class="spotlight__content">
+          <p class="spotlight__tags">Couple · Société · 1 saison</p>
+          <h1 class="spotlight__title">COUPLE APRÈS BÉBÉ</h1>
+          <p class="spotlight__hook">QUAND BÉBÉ ARRIVE, LE COUPLE EST MIS À L'ÉPREUVE</p>
+          <div class="spotlight__actions">
+            <button type="button" class="btn btn--primary btn--play">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+              Regarder
+            </button>
+            <span class="spotlight__episode">Épisode 1 — On se parle plus</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="spotlight__slide" data-slide="1">
+        <img src="assets/thumbs/recette-bebe.png" alt="Recettes bébé" class="spotlight__bg" />
+        <div class="spotlight__overlay"></div>
+        <div class="spotlight__content">
+          <p class="spotlight__tags">Cuisine · Famille · 1 saison</p>
+          <h1 class="spotlight__title">RECETTES BÉBÉ</h1>
+          <p class="spotlight__hook">DES IDÉES SIMPLES ET GOURMANDES POUR NOURRIR BÉBÉ SEREINEMENT</p>
+          <div class="spotlight__actions">
+            <button type="button" class="btn btn--primary btn--play">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+              Regarder
+            </button>
+            <span class="spotlight__episode">Épisode 1 — Premières purées</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="spotlight__slide" data-slide="2">
+        <img src="assets/thumbs/mama-chef.png" alt="Mama Chef" class="spotlight__bg" />
+        <div class="spotlight__overlay"></div>
+        <div class="spotlight__content">
+          <p class="spotlight__tags">Cuisine · Émission · 1 saison</p>
+          <h1 class="spotlight__title">MAMA CHEF</h1>
+          <p class="spotlight__hook">LES MAMANS S'AFFRONTENT AUTOUR DE LEURS PLUS BELLES RECETTES</p>
+          <div class="spotlight__actions">
+            <button type="button" class="btn btn--primary btn--play">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+              Regarder
+            </button>
+            <span class="spotlight__episode">Épisode 1 — Le gâteau d'anniversaire</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="spotlight__slide" data-slide="3">
+        <img src="assets/thumbs/allaitement-sans-filtre.png" alt="Allaitement sans filtre" class="spotlight__bg" />
+        <div class="spotlight__overlay"></div>
+        <div class="spotlight__content">
+          <p class="spotlight__tags">Documentaire · Santé · 1 saison</p>
+          <h1 class="spotlight__title">ALLAITEMENT SANS FILTRE</h1>
+          <p class="spotlight__hook">LES VRAIES HISTOIRES DES MAMANS QUI ALLAITENT</p>
+          <div class="spotlight__actions">
+            <button type="button" class="btn btn--primary btn--play">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+              Regarder
+            </button>
+            <span class="spotlight__episode">Épisode 1 — Premiers jours</span>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <div class="spotlight__controls">
+      <button type="button" class="spotlight__arrow spotlight__arrow--prev" aria-label="Mise en avant précédente">‹</button>
+      <div class="spotlight__dots" role="tablist" aria-label="Diapositives">
+        <button type="button" class="spotlight__dot spotlight__dot--active" data-goto="0" aria-label="Diapositive 1 sur 4" aria-selected="true"></button>
+        <button type="button" class="spotlight__dot" data-goto="1" aria-label="Diapositive 2 sur 4" aria-selected="false"></button>
+        <button type="button" class="spotlight__dot" data-goto="2" aria-label="Diapositive 3 sur 4" aria-selected="false"></button>
+        <button type="button" class="spotlight__dot" data-goto="3" aria-label="Diapositive 4 sur 4" aria-selected="false"></button>
+      </div>
+      <button type="button" class="spotlight__arrow spotlight__arrow--next" aria-label="Mise en avant suivante">›</button>
+      <button type="button" class="spotlight__pause" aria-label="Mettre en pause">⏸</button>
+    </div>
+
+    <div class="spotlight__signup guest-only">
+      <p>EntreMeres TV : gratuit avec votre compte. <a href="signup.html">Créer un compte</a></p>
+    </div>
+  </section>
+
+  <main class="catalog" id="contenu">
+    <!-- TOP 5 -->
+    <section class="row-section" id="series" aria-labelledby="top5-title">
+      <div class="row-section__head">
+        <h2 id="top5-title" class="row-section__title">TOP 5</h2>
+      </div>
+      <div class="row-scroll row-scroll--top5">
+        <article class="top5-card"><span class="top5-card__num">1</span><div class="poster poster--1 thumb-recette-bebe"><span class="poster__label">RECETTES BÉBÉ</span></div></article>
+        <article class="top5-card"><span class="top5-card__num">2</span><div class="poster poster--2 thumb-couple-temoignages"><span class="poster__label">ÊTRE MÈRE : TÉMOIGNAGES</span></div></article>
+        <article class="top5-card"><span class="top5-card__num">3</span><div class="poster poster--3 thumb-mama-chef"><span class="poster__label">MAMA CHEF</span></div></article>
+        <article class="top5-card"><span class="top5-card__num">4</span><div class="poster poster--4 thumb-couple"><span class="poster__label">COUPLE APRÈS BÉBÉ</span></div></article>
+        <article class="top5-card"><span class="top5-card__num">5</span><div class="poster poster--5 thumb-sos-maman"><span class="poster__label">SOS MAMAN</span></div></article>
+      </div>
+    </section>
+
+    <!-- Séries quotidiennes -->
+    <section class="row-section" aria-labelledby="daily-title">
+      <div class="row-section__head">
+        <h2 id="daily-title" class="row-section__title">Séries mamans</h2>
+        <a href="#" class="row-section__more">Voir tout</a>
+      </div>
+      <div class="row-scroll" data-row>
+        <button type="button" class="row-scroll__btn row-scroll__btn--prev" aria-label="Précédent" hidden>‹</button>
+        <div class="row-scroll__track">
+          <article class="card card--landscape c1 thumb-couple has-thumb"><span class="card__title">COUPLE APRÈS BÉBÉ</span></article>
+          <article class="card card--landscape c2 thumb-recette-bebe"><span class="card__title">RECETTES BÉBÉ</span></article>
+          <article class="card card--landscape c3 thumb-sos-maman"><span class="card__title">SOS MAMAN</span></article>
+          <article class="card card--landscape c4 thumb-allaitement"><span class="card__title">ALLAITEMENT SANS FILTRE</span></article>
+          <article class="card card--landscape c7 thumb-mama-chef has-thumb"><span class="card__title">MAMA CHEF</span></article>
+          <article class="card card--landscape c8"><span class="card__title">RUN POUSSTTE</span></article>
+        </div>
+        <button type="button" class="row-scroll__btn row-scroll__btn--next" aria-label="Suivant">›</button>
+      </div>
+    </section>
+
+    <!-- Promo interstitielle -->
+    <aside class="promo-strip" aria-label="Promotion">
+      <div class="promo-strip__inner">
+        <div class="promo-strip__text">
+          <strong>SOS MAMAN</strong>
+          <span>JE CRAQUE COMPLÈTEMENT — Regardez l'épisode 1 gratuitement</span>
+        </div>
+        <button type="button" class="btn btn--primary btn--sm btn--play">Regarder</button>
+      </div>
+    </aside>
+
+    <!-- Moments clips TF1-style -->
+    <section class="row-section" id="clips" aria-labelledby="moments-title">
+      <div class="row-section__head">
+        <h2 id="moments-title" class="row-section__title">Les moments à ne pas manquer</h2>
+      </div>
+      <div class="row-scroll" data-row>
+        <button type="button" class="row-scroll__btn row-scroll__btn--prev" aria-label="Précédent" hidden>‹</button>
+        <div class="row-scroll__track">
+          <article class="clip-card c1 thumb-sos-maman"><span class="clip-card__dur">7m</span><span class="clip-card__title">SOS Maman — Je craque devant les caméras</span><span class="clip-card__show">SOS Maman</span></article>
+          <article class="clip-card c3 thumb-allaitement"><span class="clip-card__dur">3m21</span><span class="clip-card__title">Allaitement — Les vraies confessions</span><span class="clip-card__show">Allaitement sans filtre</span></article>
+          <article class="clip-card c4 thumb-couple"><span class="clip-card__dur">6m</span><span class="clip-card__title">Couple après bébé — On se parle plus</span><span class="clip-card__show">Couple après bébé</span></article>
+        </div>
+        <button type="button" class="row-scroll__btn row-scroll__btn--next" aria-label="Suivant">›</button>
+      </div>
+    </section>
+
+    <!-- Jeunesse -->
+    <section class="row-section" id="kids" aria-labelledby="kids-title">
+      <div class="row-section__head">
+        <h2 id="kids-title" class="row-section__title">Pour les enfants</h2>
+      </div>
+      <div class="row-scroll" data-row>
+        <button type="button" class="row-scroll__btn row-scroll__btn--prev" aria-label="Précédent" hidden>‹</button>
+        <div class="row-scroll__track">
+          <article class="card card--portrait c11 thumb-histoires-du-soir"><span class="badge badge--season">Nouvelle saison</span><span class="card__title">Histoires du soir</span></article>
+          <article class="card card--portrait c12 thumb-comptines-entremeres has-thumb"><span class="card__title">Comptines EntreMeres</span></article>
+          <article class="card card--portrait c13 thumb-idees-de-jeux"><span class="card__title">Idées de jeux</span></article>
+        </div>
+        <button type="button" class="row-scroll__btn row-scroll__btn--next" aria-label="Suivant">›</button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Casting TF1-style -->
+  <section class="casting" id="casting" aria-labelledby="casting-title">
+    <div class="casting__hero">
+      <div class="casting__hero-inner">
+        <span class="casting__status">Le casting est ouvert</span>
+        <h2 id="casting-title" class="casting__title">Participez aux émissions EntreMeres TV</h2>
+        <p class="casting__intro">
+          Vous êtes maman et vous souhaitez raconter votre histoire devant les caméras ?
+          Découvrez les castings en cours et candidatez en quelques minutes.
+        </p>
+        <a href="#casting-form" class="btn btn--primary btn--lg">Je candidate</a>
+      </div>
+    </div>
+
+    <div class="casting__body">
+      <div class="casting__filters" role="tablist" aria-label="Filtrer les castings">
+        <button type="button" class="casting__filter casting__filter--active" data-filter="all" role="tab" aria-selected="true">Tous</button>
+        <button type="button" class="casting__filter" data-filter="open" role="tab" aria-selected="false">Castings ouverts</button>
+        <button type="button" class="casting__filter" data-filter="closed" role="tab" aria-selected="false">Bientôt / Fermés</button>
+      </div>
+
+      <div class="casting__grid">
+        <article class="casting-card casting-card--open" data-status="open">
+          <div class="casting-card__visual c7 thumb-mama-chef">
+            <span class="casting-card__badge casting-card__badge--open">Casting ouvert</span>
+          </div>
+          <div class="casting-card__content">
+            <h3 class="casting-card__title">Mama Chef</h3>
+            <p class="casting-card__lead">Vous aimez cuisiner et partager vos meilleures recettes ?</p>
+            <p class="casting-card__desc">
+              Participez à Mama Chef, la nouvelle émission d'EntreMères TV où des mamans passionnées s'affrontent dans des défis gourmands,
+              dans une ambiance conviviale et bienveillante. Que vous soyez experte en pâtisserie ou simplement passionnée de cuisine familiale,
+              votre talent mérite d'être mis en lumière !
+            </p>
+            <p class="casting-card__meta-label">Nous recherchons :</p>
+            <ul class="casting-card__meta">
+              <li>Des mamans passionnées de cuisine</li>
+              <li>À l'aise pour partager un moment devant la caméra</li>
+              <li>Disponibles pour une journée de tournage</li>
+            </ul>
+            <p class="casting-card__outro">Rejoignez l'aventure et tentez de remporter le titre de Mama Chef ! 🍰✨</p>
+            <button type="button" class="btn btn--primary btn--sm casting-card__cta" data-show="Mama Chef">Candidatez</button>
+          </div>
+        </article>
+
+        <article class="casting-card casting-card--open" data-status="open">
+          <div class="casting-card__visual c4 thumb-couple">
+            <span class="casting-card__badge casting-card__badge--open">Casting ouvert</span>
+          </div>
+          <div class="casting-card__content">
+            <h3 class="casting-card__title">Couple après bébé</h3>
+            <p class="casting-card__lead">Votre couple a changé depuis l'arrivée de bébé ?</p>
+            <p class="casting-card__desc">
+              EntreMeres TV recherche des couples prêts à partager leur histoire avec authenticité.
+              Fatigue, manque de temps, disputes, éloignement, mais aussi amour, reconstruction et nouveaux équilibres :
+              racontez votre parcours après l'arrivée de votre enfant.
+            </p>
+            <ul class="casting-card__meta">
+              <li>👶 Parents d'un enfant de moins de 3 ans</li>
+              <li>🎥 Tournage en couple</li>
+              <li>💬 Témoignage sincère et bienveillant</li>
+            </ul>
+            <p class="casting-card__outro">Candidatez dès maintenant !</p>
+            <button type="button" class="btn btn--primary btn--sm casting-card__cta" data-show="Couple après bébé">Candidatez</button>
+          </div>
+        </article>
+
+        <article class="casting-card casting-card--open" data-status="open">
+          <div class="casting-card__visual c2 thumb-couple-temoignages">
+            <span class="casting-card__badge casting-card__badge--open">Casting ouvert</span>
+          </div>
+          <div class="casting-card__content">
+            <h3 class="casting-card__title">🤱 Être mère : témoignages</h3>
+            <p class="casting-card__lead">Chaque maman a une histoire à raconter.</p>
+            <p class="casting-card__desc">
+              Joies, doutes, charge mentale, allaitement, solitude, accouchement, handicap, deuil, renaissance ou moments de bonheur :
+              EntreMeres TV donne la parole aux mamans. Nous recherchons des femmes de tous horizons prêtes à partager leur vécu
+              avec sincérité afin d'aider, inspirer et soutenir d'autres mamans.
+            </p>
+            <ul class="casting-card__meta">
+              <li>💗 Tous les parcours sont les bienvenus</li>
+              <li>🎥 Témoignage filmé ou enregistré</li>
+              <li>🗣️ Authenticité recherchée</li>
+            </ul>
+            <p class="casting-card__outro">Votre histoire mérite d'être entendue. Candidatez dès maintenant.</p>
+            <button type="button" class="btn btn--primary btn--sm casting-card__cta" data-show="Être mère : témoignages">Candidatez</button>
+          </div>
+        </article>
+
+        <article class="casting-card casting-card--open" data-status="open">
+          <div class="casting-card__visual c3 thumb-24h">
+            <span class="casting-card__badge casting-card__badge--open">Casting ouvert</span>
+          </div>
+          <div class="casting-card__content">
+            <h3 class="casting-card__title">24H dans la vie d'une maman</h3>
+            <p class="casting-card__lead">Et si on vous suivait pendant une journée entière ?</p>
+            <p class="casting-card__desc">
+              EntreMeres TV recherche des mamans prêtes à ouvrir les portes de leur quotidien. Réveil, préparation des enfants,
+              travail, repas, courses, charge mentale, moments de joie, fatigue, organisation… une immersion authentique
+              dans la vraie vie d'une maman.
+            </p>
+            <p class="casting-card__desc">
+              Nous souhaitons montrer la réalité de la maternité, sans filtre et avec bienveillance.
+            </p>
+            <ul class="casting-card__meta">
+              <li>📹 Une journée entière filmée avec vous</li>
+              <li>🏠 Profils variés et quotidiens bienvenus</li>
+              <li>💗 Authenticité et bienveillance</li>
+            </ul>
+            <p class="casting-card__outro">Partagez votre quotidien et inspirez d'autres mamans. Candidatez dès maintenant.</p>
+            <button type="button" class="btn btn--primary btn--sm casting-card__cta" data-show="24H dans la vie d'une maman">Candidatez</button>
+          </div>
+        </article>
+
+      </div>
+
+      <div class="casting__steps">
+        <h3 class="casting__subtitle">Comment participer ?</h3>
+        <ol class="casting__steps-list">
+          <li>
+            <strong>Choisissez votre émission</strong>
+            <span>Sélectionnez un casting ouvert correspondant à votre profil.</span>
+          </li>
+          <li>
+            <strong>Remplissez le formulaire</strong>
+            <span>Répondez sincèrement aux questions du formulaire.</span>
+          </li>
+          <li>
+            <strong>Attendez la réponse</strong>
+            <span>Seules les candidatures retenues sont recontactées par nos équipes de production.</span>
+          </li>
+        </ol>
+      </div>
+
+      <div class="casting__form-wrap" id="casting-form">
+        <h3 class="casting__subtitle">Formulaire de candidature</h3>
+        <p class="casting__form-note">Inspirez-vous de votre vécu : authenticité et sincérité font la différence.</p>
+        <form class="casting-form" id="casting-form-el">
+          <div class="casting-form__row">
+            <label class="casting-form__field">
+              Émission visée
+              <select name="show" required id="casting-show-select">
+                <option value="">Choisir une émission</option>
+                <option value="Mama Chef">Mama Chef</option>
+                <option value="Couple après bébé">Couple après bébé</option>
+                <option value="Être mère : témoignages">🤱 Être mère : témoignages</option>
+                <option value="24H dans la vie d'une maman">24H dans la vie d'une maman</option>
+              </select>
+            </label>
+            <label class="casting-form__field">
+              Prénom
+              <input type="text" name="firstname" required autocomplete="given-name" />
+            </label>
+            <label class="casting-form__field">
+              Nom
+              <input type="text" name="lastname" required autocomplete="family-name" />
+            </label>
+          </div>
+          <div class="casting-form__row">
+            <label class="casting-form__field">
+              E-mail
+              <input type="email" name="email" required autocomplete="email" />
+            </label>
+            <label class="casting-form__field">
+              Téléphone
+              <input type="tel" name="phone" required autocomplete="tel" />
+            </label>
+            <label class="casting-form__field">
+              Ville
+              <input type="text" name="city" required autocomplete="address-level2" />
+            </label>
+          </div>
+          <div class="casting-form__row">
+            <label class="casting-form__field">
+              Âge
+              <input type="number" name="age" min="18" max="99" required />
+            </label>
+            <label class="casting-form__field">
+              Nombre d'enfants
+              <input type="number" name="children" min="0" max="20" required />
+            </label>
+            <label class="casting-form__field">
+              Disponibilités
+              <select name="availability" required>
+                <option value="">Sélectionner</option>
+                <option value="semaine">En semaine</option>
+                <option value="weekend">Le week-end</option>
+                <option value="flexible">Flexible</option>
+              </select>
+            </label>
+          </div>
+          <label class="casting-form__field casting-form__field--full">
+            Pourquoi souhaitez-vous participer ?
+            <textarea name="motivation" rows="4" required placeholder="Racontez-nous votre histoire en quelques lignes…"></textarea>
+          </label>
+          <label class="casting-form__checkbox">
+            <input type="checkbox" name="consent" required />
+            <span>J'accepte que mes données soient utilisées dans le cadre du casting EntreMeres TV et j'ai lu la <a href="politique-confidentialite.html" target="_blank" rel="noopener">politique de confidentialité</a>.</span>
+          </label>
+          <button type="submit" class="btn btn--primary btn--lg">Envoyer ma candidature</button>
+          <p class="casting-form__status" id="casting-form-status" hidden role="status"></p>
+        </form>
+        <p class="casting__disclaimer">
+          Les équipes de production reçoivent de nombreuses candidatures. Vous serez recontactée uniquement si votre profil est retenu.
+        </p>
+      </div>
+
+      <div class="casting__faq">
+        <h3 class="casting__subtitle">Questions fréquentes — Casting</h3>
+        <details class="faq__item">
+          <summary>Comment savoir si mon casting est encore ouvert ?</summary>
+          <div class="faq__answer"><p>Consultez la liste ci-dessus : seules les émissions marquées « Casting ouvert » acceptent des candidatures. Si une émission n'y figure pas, il n'y a pas de casting en cours.</p></div>
+        </details>
+        <details class="faq__item">
+          <summary>Combien de temps avant d'avoir une réponse ?</summary>
+          <div class="faq__answer"><p>Le délai varie selon les émissions. Sans nouvelles de notre part, cela signifie que votre candidature n'a pas été retenue pour cette session.</p></div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section marketing -->
+  <section class="features guest-only" aria-labelledby="features-title">
+    <h2 id="features-title" class="section-title section-title--center">Encore plus de raisons de rejoindre EntreMeres TV</h2>
+    <div class="features__grid">
+      <article class="feature-card">
+        <div class="feature-card__icon">📺</div>
+        <h3>Regardez sur votre TV</h3>
+        <p>Smart TV, Chromecast, Apple TV, tablette et ordinateur.</p>
+      </article>
+      <article class="feature-card">
+        <div class="feature-card__icon">⬇️</div>
+        <h3>Téléchargement hors ligne</h3>
+        <p>Enregistrez vos épisodes préférés pour les regarder sans Wi-Fi.</p>
+      </article>
+      <article class="feature-card">
+        <div class="feature-card__icon">📱</div>
+        <h3>Où que vous soyez</h3>
+        <p>Accès illimité sur tous vos appareils connectés.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="faq" id="faq" aria-labelledby="faq-title">
+    <h2 id="faq-title" class="section-title section-title--center">Foire aux questions</h2>
+    <div class="faq__list">
+      <details class="faq__item">
+        <summary>EntreMeres TV, qu'est-ce que c'est ?</summary>
+        <div class="faq__answer"><p>EntreMeres TV est le service de streaming de la communauté EntreMeres : séries, documentaires et contenus autour de la maternité et de l'entraide entre mamans.</p></div>
+      </details>
+      <details class="faq__item">
+        <summary>Combien coûte EntreMeres TV ?</summary>
+        <div class="faq__answer"><p>EntreMeres TV est inclus dans votre compte EntreMeres. Créez un compte gratuitement et accédez au catalogue depuis l'onglet TV.</p></div>
+      </details>
+      <details class="faq__item">
+        <summary>Où puis-je regarder EntreMeres TV ?</summary>
+        <div class="faq__answer"><p>Sur smartphone, tablette, ordinateur ou en diffusant sur votre TV via Chromecast ou AirPlay.</p></div>
+      </details>
+      <details class="faq__item">
+        <summary>Que puis-je regarder ?</summary>
+        <div class="faq__answer"><p>SOS Maman, Recettes bébé, Couple après bébé, Allaitement sans filtre et bien d'autres contenus. De nouveaux épisodes arrivent chaque semaine.</p></div>
+      </details>
+    </div>
+  </section>
+
+  <section class="bottom-cta guest-only" id="inscription" aria-labelledby="bottom-cta-title">
+    <p id="bottom-cta-title" class="bottom-cta__label">Prêt à regarder EntreMeres TV ? Créez votre compte gratuitement — le même que sur l'app.</p>
+    <form class="email-form email-form--center" id="bottom-form">
+      <input type="email" name="email" class="email-form__input" placeholder="Adresse e-mail" required autocomplete="email" aria-label="Adresse e-mail" />
+      <button type="submit" class="btn btn--primary btn--lg">Créer mon compte</button>
+    </form>
+    <p class="bottom-cta__hint">Déjà inscrite ? <a href="login.html">Connectez-vous</a></p>
+  </section>
+
+  <footer class="footer">
+    <p class="footer__contact">Des questions ? <a href="mailto:contact@entremeres.fr">contact@entremeres.fr</a></p>
+    <div class="footer__columns">
+      <div class="footer__col">
+        <strong>EntreMeres TV</strong>
+        <span class="footer__tagline">La plateforme des mamans</span>
+        <a href="#series">Programmes</a>
+        <a href="#clips">Vidéos</a>
+        <a href="#casting">Casting</a>
+        <a href="partenariats.html">Partenariats</a>
+        <a href="#faq">FAQ</a>
+      </div>
+      <div class="footer__col">
+        <strong>Séries</strong>
+        <a href="#">SOS Maman</a>
+        <a href="#">Recettes bébé</a>
+        <a href="#">Couple après bébé</a>
+        <a href="#">Mama Chef</a>
+      </div>
+      <div class="footer__col">
+        <strong>EntreMeres</strong>
+        <a href="#">Communauté</a>
+        <a href="#">Salon</a>
+        <a href="#">Rencontrer</a>
+        <a href="#">Charte</a>
+      </div>
+      <div class="footer__col">
+        <strong>Infos légales</strong>
+        <a href="partenariats.html">Partenariats</a>
+        <a href="cgu.html">CGU</a>
+        <a href="mentions-legales.html">Mentions légales</a>
+        <a href="politique-confidentialite.html">Politique de confidentialité</a>
+        <a href="rgpd.html">RGPD — Vos droits</a>
+        <a href="mailto:contact@entremeres.fr">Contact</a>
+      </div>
+    </div>
+    <p class="footer__legal">
+      <a href="partenariats.html">Partenariats</a>
+      <span aria-hidden="true">·</span>
+      <a href="cgu.html">CGU</a>
+      <span aria-hidden="true">·</span>
+      <a href="mentions-legales.html">Mentions légales</a>
+      <span aria-hidden="true">·</span>
+      <a href="politique-confidentialite.html">Politique de confidentialité</a>
+      <span aria-hidden="true">·</span>
+      <a href="rgpd.html">RGPD</a>
+      <span aria-hidden="true">·</span>
+      <a href="#" data-open-cookie-prefs>Préférences cookies</a>
+      <span aria-hidden="true">·</span>
+      <a href="mailto:contact@entremeres.fr">Exercer vos droits</a>
+    </p>
+    <p class="lang-current lang-current--footer" aria-label="Langue du site : Français">Français</p>
+    <p class="footer__brand">EntreMeres TV Copyright © 2026 — France</p>
+  </footer>
+
+  <dialog class="modal" id="connexion" aria-labelledby="modal-title">
+    <div class="modal__backdrop" data-close-modal></div>
+    <div class="modal__panel">
+      <button type="button" class="modal__close" data-close-modal aria-label="Fermer">&times;</button>
+      <h2 id="modal-title" class="modal__title">S'identifier</h2>
+      <p class="auth-error" id="login-error" role="alert" hidden></p>
+      <form class="modal__form" id="login-form">
+        <label class="modal__label">Adresse e-mail<input type="email" name="email" required autocomplete="email" /></label>
+        <label class="modal__label">Mot de passe<input type="password" name="password" required autocomplete="current-password" /></label>
+        <button type="submit" class="btn btn--primary btn--full">S'identifier</button>
+        <p class="modal__hint">Pas encore de compte ? <a href="signup.html">Inscrivez-vous</a></p>
+      </form>
+    </div>
+  </dialog>
+
+  <dialog class="modal modal--search" id="site-search" aria-labelledby="search-title">
+    <div class="modal__backdrop" data-close-search></div>
+    <div class="modal__panel modal__panel--search">
+      <button type="button" class="modal__close" data-close-search aria-label="Fermer">&times;</button>
+      <h2 id="search-title" class="modal__title modal__title--search">Rechercher</h2>
+      <label class="search-field">
+        <span class="visually-hidden">Rechercher un programme, un clip ou un casting</span>
+        <input type="search" id="search-input" class="search-field__input" placeholder="SOS Maman, Mama Chef, casting…" autocomplete="off" />
+      </label>
+      <p class="search-hint" id="search-hint">Programmes, clips, castings, FAQ… Raccourci : Ctrl+K</p>
+      <ul class="search-results" id="search-results" role="listbox" aria-label="Résultats de recherche"></ul>
+      <p class="search-empty" id="search-empty" hidden>Aucun résultat pour cette recherche.</p>
+    </div>
+  </dialog>
+
+  <dialog class="modal modal--watch" id="watch-soon" aria-labelledby="watch-soon-title">
+    <div class="modal__backdrop" data-close-watch></div>
+    <div class="modal__panel modal__panel--compact">
+      <button type="button" class="modal__close" data-close-watch aria-label="Fermer">&times;</button>
+      <p class="modal__eyebrow">EntreMeres TV</p>
+      <h2 id="watch-soon-title" class="modal__title modal__title--watch">Disponible le 1<sup>er</sup> septembre</h2>
+      <p class="modal__text">Les épisodes seront accessibles à partir du 1<sup>er</sup> septembre. Revenez bientôt pour regarder vos émissions préférées.</p>
+      <button type="button" class="btn btn--primary btn--full" data-close-watch>Compris</button>
+    </div>
+  </dialog>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/app-config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/app-nav.js"></script>
+  <script src="js/auth-ui.js"></script>
+  <script src="js/casting-form.js"></script>
+  <script src="js/cookies.js"></script>
+  <script src="js/search.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

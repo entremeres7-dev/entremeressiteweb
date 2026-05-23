@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inscription — EntreMeres TV</title>
+  <link rel="icon" href="assets/favicon.png" type="image/png" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/auth.css" />
+</head>
+<body class="auth-page">
+  <header class="site-header site-header--solid">
+    <div class="site-header__inner">
+      <a href="index.html" class="logo" aria-label="EntreMeres TV">
+        <span class="logo__brand">
+          <span class="logo__entre">Entre</span><span class="logo__meres">Meres</span>
+          <span class="logo__badge">TV</span>
+        </span>
+        <span class="logo__tagline">La plateforme des mamans</span>
+      </a>
+      <a href="index.html" class="legal-back">← Retour</a>
+    </div>
+  </header>
+
+  <main class="auth-main">
+    <div class="auth-card">
+      <h1 class="auth-card__title">Créer un compte</h1>
+      <p class="auth-card__subtitle">Rejoignez la communauté EntreMeres — un seul compte pour l'app et le site</p>
+
+      <div class="auth-error" id="auth-error" role="alert"></div>
+
+      <form id="signup-page-form">
+        <label class="auth-field">
+          Pseudo
+          <input type="text" name="username" required autocomplete="username" maxlength="24" placeholder="Ex. Marie_maman" />
+        </label>
+        <label class="auth-field">
+          Adresse e-mail
+          <input type="email" name="email" required autocomplete="email" id="signup-email" />
+        </label>
+        <label class="auth-field">
+          Mot de passe
+          <input type="password" name="password" required autocomplete="new-password" minlength="6" placeholder="6 caractères minimum" />
+        </label>
+        <label class="auth-checkbox">
+          <input type="checkbox" name="legal-consent" id="signup-legal-consent" required />
+          <span>
+            J'accepte les
+            <a href="cgu.html" target="_blank" rel="noopener">Conditions Générales d'Utilisation</a>
+            et la
+            <a href="politique-confidentialite.html" target="_blank" rel="noopener">Politique de confidentialité</a>
+            d'EntreMeres.
+          </span>
+        </label>
+        <button type="submit" class="btn btn--primary btn--lg auth-submit" id="signup-submit">S'inscrire</button>
+      </form>
+
+      <p class="auth-switch">Déjà un compte ? <a href="login.html">Se connecter</a></p>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    (async function () {
+      const params = new URLSearchParams(window.location.search);
+      const emailInput = document.getElementById('signup-email');
+      if (params.get('email') && emailInput) emailInput.value = params.get('email');
+
+      const session = await EntreMeresAuth.getSession();
+      if (session) {
+        window.location.replace('compte.html');
+        return;
+      }
+
+      const form = document.getElementById('signup-page-form');
+      const errorEl = document.getElementById('auth-error');
+      const submitBtn = document.getElementById('signup-submit');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        errorEl.classList.remove('is-visible');
+
+        const username = form.username.value.trim();
+        const email = form.email.value.trim();
+        const password = form.password.value;
+
+        if (password.length < 6) {
+          errorEl.textContent = 'Le mot de passe doit contenir au moins 6 caractères.';
+          errorEl.classList.add('is-visible');
+          return;
+        }
+
+        if (!form['legal-consent']?.checked) {
+          errorEl.textContent = 'Vous devez accepter les CGU et la politique de confidentialité pour créer un compte.';
+          errorEl.classList.add('is-visible');
+          return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Inscription…';
+
+        const { error, signedIn } = await EntreMeresAuth.signUp(email, password, username);
+
+        if (error) {
+          errorEl.textContent = error;
+          errorEl.classList.add('is-visible');
+          submitBtn.disabled = false;
+          submitBtn.textContent = "S'inscrire";
+          return;
+        }
+
+        if (signedIn) {
+          window.location.href = 'compte.html';
+        } else {
+          window.location.href = 'login.html?email=' + encodeURIComponent(email);
+        }
+      });
+    })();
+  </script>
+  <script src="js/cookies.js"></script>
+</body>
+</html>

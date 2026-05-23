@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code - EntreMeres</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #ff6a88 0%, #ff8e8e 100%);
+            color: white;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            text-align: center;
+            color: #333;
+        }
+        h1 {
+            margin-top: 0;
+            color: #ff6a88;
+        }
+        .qr-code {
+            margin: 20px 0;
+        }
+        .url {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .instructions {
+            margin-top: 20px;
+            text-align: left;
+            color: #666;
+        }
+        .instructions ol {
+            padding-left: 20px;
+        }
+        .instructions li {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 EntreMeres - QR Code</h1>
+        <div class="qr-code">
+            <img src="data:image/png;base64,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" alt="QR Code Expo" />
+        </div>
+        <div class="url">
+            <strong>URL:</strong><br>
+            exp://192.168.1.57:8081
+        </div>
+        <div class="instructions">
+            <h3>Instructions:</h3>
+            <ol>
+                <li>Ouvrez l'application <strong>Expo Go</strong> sur votre iPhone</li>
+                <li>Scannez le QR code ci-dessus</li>
+                <li>Ou entrez manuellement l'URL dans Expo Go</li>
+            </ol>
+        </div>
+    </div>
+</body>
+</html>

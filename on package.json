@@ -1,0 +1,16 @@
+[1mdiff --git a/app.json b/app.json[m
+[1mindex 9e16803..e6325bf 100644[m
+[1m--- a/app.json[m
+[1m+++ b/app.json[m
+[36m@@ -24,9 +24,9 @@[m
+         "backgroundColor": "#ffffff"[m
+       },[m
+       "infoPlist": {[m
+[31m-        "NSCameraUsageDescription": "EntreMeres utilise votre caméra pour vous permettre de créer et partager des stories et posts personnalisés avec d'autres mamans. Par exemple, vous pouvez prendre des photos de vos enfants, filmer des moments de vie quotidienne, ou créer du contenu vidéo pour votre communauté. Cette fonctionnalité est essentielle pour partager vos expériences maternelles de manière authentique et visuelle.",[m
+[32m+[m[32m        "NSCameraUsageDescription": "EntreMeres utilise votre caméra pour vous permettre de créer et partager des stories, posts personnalisés et diffusions en direct avec d'autres mamans. Par exemple, vous pouvez prendre des photos de vos enfants, filmer des moments de vie quotidienne, créer du contenu vidéo pour votre communauté, ou diffuser en direct vos activités. Cette fonctionnalité est essentielle pour partager vos expériences maternelles de manière authentique et visuelle.",[m
+         "NSPhotoLibraryUsageDescription": "EntreMeres accède à votre galerie photos pour vous permettre de sélectionner et partager des images et vidéos existantes dans vos stories et posts. Par exemple, vous pouvez choisir des photos de famille, des captures d'écran de moments importants, ou des images que vous souhaitez partager avec la communauté des mamans. Cette fonctionnalité enrichit votre expérience de partage en vous donnant accès à vos souvenirs et créations.",[m
+[31m-        "NSMicrophoneUsageDescription": "EntreMeres utilise votre microphone pour capturer l'audio lors de l'enregistrement de vidéos et la création de contenu multimédia. Par exemple, vous pouvez enregistrer des messages vocaux pour vos stories, capturer le son de vos enfants qui rient, ou ajouter des commentaires audio à vos vidéos. Cette fonctionnalité rend vos partages plus vivants et engageants pour la communauté.",[m
+[32m+[m[32m        "NSMicrophoneUsageDescription": "EntreMeres utilise votre microphone pour capturer l'audio lors de l'enregistrement de vidéos, la création de contenu multimédia et les diffusions en direct. Par exemple, vous pouvez enregistrer des messages vocaux pour vos stories, capturer le son de vos enfants qui rient, ajouter des commentaires audio à vos vidéos, ou diffuser en direct avec d'autres mamans. Cette fonctionnalité rend vos partages plus vivants et engageants pour la communauté.",[m
+         "NSPhotoLibraryAddUsageDescription": "EntreMeres sauvegarde automatiquement vos créations et stories dans votre galerie photos pour vous permettre de conserver vos souvenirs et de les partager en dehors de l'application. Par exemple, vos stories créées, vos posts personnalisés, et vos contenus vidéo seront sauvegardés localement pour un accès facile et une sauvegarde personnelle.",[m
+ [m
+         "ITSAppUsesNonExemptEncryption": false,[m

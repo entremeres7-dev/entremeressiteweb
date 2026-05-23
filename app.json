@@ -1,0 +1,177 @@
+{
+  "expo": {
+    "name": "EntreMeres",
+    "slug": "entremeres",
+    "version": "3.0.23",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/images/LaunchScreen2.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "bundleIdentifier": "com.entremeres.app",
+      "buildNumber": "83",
+      "supportsTablet": true,
+      "splash": {
+        "image": "./assets/images/LaunchScreen2.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#ffffff"
+      },
+      "infoPlist": {
+        "NSCameraUsageDescription": "EntreMeres utilise votre caméra pour vous permettre de créer et partager des stories, posts personnalisés et diffusions en direct avec d'autres mamans. Par exemple, vous pouvez prendre des photos de vos enfants, filmer des moments de vie quotidienne, créer du contenu vidéo pour votre communauté, ou diffuser en direct vos activités. Cette fonctionnalité est essentielle pour partager vos expériences maternelles de manière authentique et visuelle.",
+        "NSPhotoLibraryUsageDescription": "EntreMeres accède à votre galerie photos pour vous permettre de sélectionner et partager des images et vidéos existantes dans vos stories et posts. Par exemple, vous pouvez choisir des photos de famille, des captures d'écran de moments importants, ou des images que vous souhaitez partager avec la communauté des mamans. Cette fonctionnalité enrichit votre expérience de partage en vous donnant accès à vos souvenirs et créations.",
+        "NSMicrophoneUsageDescription": "EntreMeres utilise votre microphone pour capturer l'audio lors de l'enregistrement de vidéos, la création de contenu multimédia et les diffusions en direct. Par exemple, vous pouvez enregistrer des messages vocaux pour vos stories, capturer le son de vos enfants qui rient, ajouter des commentaires audio à vos vidéos, ou diffuser en direct avec d'autres mamans. Cette fonctionnalité rend vos partages plus vivants et engageants pour la communauté.",
+        "NSPhotoLibraryAddUsageDescription": "EntreMeres sauvegarde automatiquement vos créations et stories dans votre galerie photos pour vous permettre de conserver vos souvenirs et de les partager en dehors de l'application. Par exemple, vos stories créées, vos posts personnalisés, et vos contenus vidéo seront sauvegardés localement pour un accès facile et une sauvegarde personnelle.",
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIRequiresPersistentWiFi": false,
+        "UIBackgroundModes": [
+          "remote-notification"
+        ],
+        "UIStatusBarStyle": "default",
+        "UIViewControllerBasedStatusBarAppearance": false,
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": false,
+          "NSExceptionDomains": {
+            "supabase.co": {
+              "NSExceptionAllowsInsecureHTTPLoads": false,
+              "NSExceptionMinimumTLSVersion": "1.2"
+            }
+          }
+        }
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.entremeres.app",
+      "versionCode": 79,
+      "compileSdkVersion": 36,
+      "targetSdkVersion": 36,
+      "playStoreConfig": {
+        "requestAdvertisingId": false,
+        "childDirected": false,
+        "targetAudience": "MIXED_AUDIENCE"
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_MEDIA_VIDEO",
+        "android.permission.READ_MEDIA_AUDIO",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.INTERNET",
+        "android.permission.ACCESS_NETWORK_STATE",
+        "android.permission.VIBRATE",
+        "android.permission.WAKE_LOCK",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.WAKE_LOCK"
+      ],
+      "allowBackup": true,
+      "softwareKeyboardLayoutMode": "pan",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "entremeres.fr"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
+    },
+    "web": {
+      "favicon": "./assets/images/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "EntreMeres utilise votre caméra pour vous permettre de créer et partager des stories et posts personnalisés avec d'autres mamans. Par exemple, vous pouvez prendre des photos de vos enfants, filmer des moments de vie quotidienne, ou créer du contenu vidéo pour votre communauté. Cette fonctionnalité est essentielle pour partager vos expériences maternelles de manière authentique et visuelle."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "EntreMeres accède à votre galerie photos pour vous permettre de sélectionner et partager des images et vidéos existantes dans vos stories et posts. Par exemple, vous pouvez choisir des photos de famille, des captures d'écran de moments importants, ou des images que vous souhaitez partager avec la communauté des mamans. Cette fonctionnalité enrichit votre expérience de partage en vous donnant accès à vos souvenirs et créations."
+        }
+      ],
+      [
+        "expo-av",
+        {
+          "microphonePermission": "EntreMeres utilise votre microphone pour capturer l'audio lors de l'enregistrement de vidéos et la création de contenu multimédia. Par exemple, vous pouvez enregistrer des messages vocaux pour vos stories, capturer le son de vos enfants qui rient, ou ajouter des commentaires audio à vos vidéos. Cette fonctionnalité rend vos partages plus vivants et engageants pour la communauté."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#ff6a88"
+        }
+      ],
+      "expo-video",
+      "expo-web-browser",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "packaging": {
+              "jniLibs": {
+                "useLegacyPackaging": false
+              }
+            }
+          }
+        }
+      ],
+      "./plugins/with-16kb-pages-support.js"
+    ],
+    "scheme": "entremeres",
+    "intentFilters": [
+      {
+        "action": "VIEW",
+        "autoVerify": true,
+        "data": [
+          {
+            "scheme": "entremeres"
+          }
+        ],
+        "category": [
+          "BROWSABLE",
+          "DEFAULT"
+        ]
+      }
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "tsconfigPaths": true,
+      "baseUrl": "/app"
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "9f24c677-ba0e-4c73-b4c3-a986201b2cec"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "sdkVersion"
+    },
+    "owner": "asmames"
+  }
+}

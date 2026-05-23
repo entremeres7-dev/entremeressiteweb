@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Connexion — EntreMeres TV</title>
+  <link rel="icon" href="assets/favicon.png" type="image/png" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/auth.css" />
+</head>
+<body class="auth-page">
+  <header class="site-header site-header--solid">
+    <div class="site-header__inner">
+      <a href="index.html" class="logo" aria-label="EntreMeres TV">
+        <span class="logo__brand">
+          <span class="logo__entre">Entre</span><span class="logo__meres">Meres</span>
+          <span class="logo__badge">TV</span>
+        </span>
+        <span class="logo__tagline">La plateforme des mamans</span>
+      </a>
+      <a href="index.html" class="legal-back">← Retour</a>
+    </div>
+  </header>
+
+  <main class="auth-main">
+    <div class="auth-card">
+      <p class="auth-card__tagline">Une communauté de mamans.<br /><em>Du soutien. Des rencontres.</em></p>
+      <h1 class="auth-card__title">Connexion</h1>
+      <p class="auth-card__subtitle">Utilisez le même compte que sur l'application EntreMeres</p>
+
+      <div class="auth-error" id="auth-error" role="alert"></div>
+
+      <form id="login-page-form">
+        <label class="auth-field">
+          Adresse e-mail
+          <input type="email" name="email" required autocomplete="email" id="login-email" />
+        </label>
+        <label class="auth-field">
+          Mot de passe
+          <input type="password" name="password" required autocomplete="current-password" />
+        </label>
+        <button type="submit" class="btn btn--primary btn--lg auth-submit" id="login-submit">Se connecter</button>
+      </form>
+
+      <p class="auth-switch">Pas encore de compte ? <a href="signup.html">Créer un compte</a></p>
+      <p class="auth-note">Même identifiants sur mobile, tablette et ordinateur. Votre profil EntreMeres est synchronisé.</p>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    (async function () {
+      const params = new URLSearchParams(window.location.search);
+      const emailInput = document.getElementById('login-email');
+      if (params.get('email') && emailInput) emailInput.value = params.get('email');
+
+      const session = await EntreMeresAuth.getSession();
+      if (session) {
+        window.location.replace('compte.html');
+        return;
+      }
+
+      const form = document.getElementById('login-page-form');
+      const errorEl = document.getElementById('auth-error');
+      const submitBtn = document.getElementById('login-submit');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        errorEl.classList.remove('is-visible');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Connexion…';
+
+        const email = form.email.value;
+        const password = form.password.value;
+        const { error } = await EntreMeresAuth.signIn(email, password);
+
+        if (error) {
+          errorEl.textContent = error;
+          errorEl.classList.add('is-visible');
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Se connecter';
+          return;
+        }
+
+        const redirect = params.get('redirect') || 'compte.html';
+        window.location.href = redirect;
+      });
+    })();
+  </script>
+  <script src="js/cookies.js"></script>
+</body>
+</html>

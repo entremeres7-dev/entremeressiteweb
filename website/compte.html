@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+
+<html lang="fr">
+
+<head>
+
+  <meta charset="UTF-8" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Mon compte — EntreMeres</title>
+
+  <link rel="icon" href="assets/favicon.png" type="image/png" />
+
+  <link rel="stylesheet" href="css/styles.css" />
+
+  <link rel="stylesheet" href="css/auth.css" />
+
+</head>
+
+<body class="auth-page">
+
+  <header class="site-header site-header--solid">
+
+    <div class="site-header__inner">
+
+      <a href="index.html" class="logo" aria-label="EntreMeres TV">
+
+        <span class="logo__brand">
+
+          <span class="logo__entre">Entre</span><span class="logo__meres">Meres</span>
+
+          <span class="logo__badge">TV</span>
+
+        </span>
+
+        <span class="logo__tagline">La plateforme des mamans</span>
+
+      </a>
+
+      <button type="button" class="btn btn--ghost btn--sm" id="logout-btn">Déconnexion</button>
+
+    </div>
+
+  </header>
+
+
+
+  <main class="auth-main compte-page">
+
+    <div class="compte-welcome">
+
+      <div class="compte-avatar" id="compte-avatar" aria-hidden="true"></div>
+
+      <h1>Bonjour, <span id="profile-name">Maman</span> 👋</h1>
+
+      <p id="profile-email">Vous êtes connectée avec votre compte EntreMeres.</p>
+
+
+
+      <div class="gamif-preview" id="gamif-preview" aria-label="Votre progression"></div>
+
+
+
+      <h2 class="compte-hub__title">Votre espace EntreMeres</h2>
+
+      <p class="compte-hub__subtitle">Accédez à toutes les fonctionnalités de l'application, directement depuis votre ordinateur.</p>
+
+
+
+      <div class="compte-hub__grid">
+
+        <a href="index.html" class="hub-card">
+
+          <span class="hub-card__icon">📺</span>
+
+          <span class="hub-card__label">EntreMeres TV</span>
+
+          <span class="hub-card__desc">Séries, docs et casting</span>
+
+        </a>
+
+        <a href="#" data-app-route="sos-maman" class="hub-card">
+
+          <span class="hub-card__icon">🆘</span>
+
+          <span class="hub-card__label">SOS Maman</span>
+
+          <span class="hub-card__desc">Entraide et soutien entre mamans</span>
+
+        </a>
+
+        <a href="#" data-app-route="rencontrer" class="hub-card">
+
+          <span class="hub-card__icon">💗</span>
+
+          <span class="hub-card__label">Rencontres</span>
+
+          <span class="hub-card__desc">Rencontrer d'autres mamans près de chez vous</span>
+
+        </a>
+
+        <a href="#" data-app-route="profil" class="hub-card">
+
+          <span class="hub-card__icon">👤</span>
+
+          <span class="hub-card__label">Profil</span>
+
+          <span class="hub-card__desc">Gamification, cœurs et paramètres</span>
+
+        </a>
+
+        <a href="#" data-app-route="ma-liste" class="hub-card">
+
+          <span class="hub-card__icon">📋</span>
+
+          <span class="hub-card__label">Ma liste</span>
+
+          <span class="hub-card__desc">Vos contenus sauvegardés</span>
+
+        </a>
+
+        <a href="#" data-app-route="messages" class="hub-card">
+
+          <span class="hub-card__icon">💬</span>
+
+          <span class="hub-card__label">Messages</span>
+
+          <span class="hub-card__desc">Discussions avec vos amies</span>
+
+        </a>
+
+      </div>
+
+
+
+      <p class="auth-note">
+
+        Même compte sur <strong>mobile, tablette et ordinateur</strong>.
+
+        Vos cœurs, votre profil et vos conversations sont synchronisés.
+
+      </p>
+
+    </div>
+
+  </main>
+
+
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script src="js/supabase-config.js"></script>
+
+  <script src="js/app-config.js"></script>
+
+  <script src="js/auth.js"></script>
+
+  <script src="js/app-nav.js"></script>
+
+  <script>
+
+    (async function () {
+
+      const { session, profile } = await EntreMeresAuth.getCurrentProfile();
+
+
+
+      if (!session) {
+
+        window.location.replace('login.html?redirect=compte.html');
+
+        return;
+
+      }
+
+
+
+      const nameEl = document.getElementById('profile-name');
+
+      const emailEl = document.getElementById('profile-email');
+
+
+
+      if (nameEl) nameEl.textContent = profile?.username || session.user.email?.split('@')[0] || 'Maman';
+
+      if (emailEl && session.user.email) {
+
+        emailEl.textContent = 'Connectée en tant que ' + session.user.email;
+
+      }
+
+
+
+      const avatarEl = document.getElementById('compte-avatar');
+
+      if (avatarEl) EntreMeresAuth.renderAvatar(avatarEl, profile, session);
+
+
+
+      EntreMeresGamification.renderGamificationPreview(
+
+        document.getElementById('gamif-preview'),
+
+        profile,
+
+      );
+
+      EntreMeresGamification.bindAppLinks();
+
+
+
+      document.getElementById('logout-btn')?.addEventListener('click', async () => {
+
+        await EntreMeresAuth.signOut();
+
+        window.location.href = 'index.html';
+
+      });
+
+    })();
+
+  </script>
+  <script src="js/cookies.js"></script>
+</body>
+
+</html>
+
+
