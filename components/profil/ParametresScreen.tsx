@@ -23,7 +23,7 @@ import {
 } from '@/lib/settings/notificationPreferences';
 import { deactivatePushDevice, registerPushDevice } from '@/lib/push/registerPushDevice';
 
-const APP_VERSION = Constants.expoConfig?.version ?? '3.0.23';
+const APP_VERSION = Constants.expoConfig?.version ?? '3.0.24';
 import { TAB_BAR_CLEARANCE } from '@/constants/tabBarLayout';
 
 function createStyles(c: AppColors) {

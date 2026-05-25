@@ -2,9 +2,9 @@
  * Configuration Expo – source unique pour la version et les numéros de build.
  * Pour une nouvelle release : modifier uniquement les constantes ci-dessous.
  */
-const APP_VERSION = '3.0.23';
-const IOS_BUILD_NUMBER = '83';
-const ANDROID_VERSION_CODE = 79;
+const APP_VERSION = '3.0.24';
+const IOS_BUILD_NUMBER = '84';
+const ANDROID_VERSION_CODE = 80;
 
 module.exports = ({ config }) => ({
   ...config,

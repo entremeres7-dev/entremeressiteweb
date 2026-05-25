@@ -2,7 +2,7 @@
   "expo": {
     "name": "EntreMeres",
     "slug": "entremeres",
-    "version": "3.0.23",
+    "version": "3.0.24",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "userInterfaceStyle": "light",
@@ -16,7 +16,7 @@
     ],
     "ios": {
       "bundleIdentifier": "com.entremeres.app",
-      "buildNumber": "83",
+      "buildNumber": "84",
       "supportsTablet": true,
       "splash": {
         "image": "./assets/images/LaunchScreen2.png",
@@ -52,7 +52,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.entremeres.app",
-      "versionCode": 79,
+      "versionCode": 80,
       "compileSdkVersion": 36,
       "targetSdkVersion": 36,
       "playStoreConfig": {
