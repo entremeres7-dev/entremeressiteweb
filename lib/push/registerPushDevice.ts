@@ -6,6 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '@/supabaseClient';
 
 const DEVICE_ID_KEY = 'entremeres_push_device_id';
+const PUSH_ENABLED_KEY = 'settings_push_enabled';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -28,6 +29,9 @@ async function getOrCreateDeviceId(): Promise<string> {
 /** Enregistre le token push dans push_devices (après connexion). */
 export async function registerPushDevice(userId: string): Promise<void> {
   if (!Device.isDevice) return;
+
+  const pushEnabled = await AsyncStorage.getItem(PUSH_ENABLED_KEY);
+  if (pushEnabled === 'false') return;
 
   const { status: existing } = await Notifications.getPermissionsAsync();
   let finalStatus = existing;

@@ -12,7 +12,6 @@ import {
   Platform,
 } from 'react-native';
 import { createPortal } from 'react-dom';
-import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -26,11 +25,12 @@ import { useTheme } from '@/context/ThemeContext';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import { DisplayNameWithTier } from '@/components/gamification/DisplayNameWithTier';
+import { RencontreProfilePhoto } from './RencontreProfilePhoto';
 import { showAppAlert, showLoginRequiredAlert } from '@/lib/ui/actionSheet';
 import type { MamanRencontre } from '@/lib/rencontres/types';
 
 const DESKTOP_MODAL_WIDTH = 480;
-const DESKTOP_PHOTO_HEIGHT = 360;
+const DESKTOP_PHOTO_HEIGHT = 340;
 const WEB_OVERLAY_Z_INDEX = 100000;
 
 const WEB_OVERLAY_STYLE: React.CSSProperties = {
@@ -115,7 +115,8 @@ export function RencontreProfileModal({ profile, onClose, onPass, onLike }: Prop
 
   if (!profile || (Platform.OS === 'web' && !portalReady)) return null;
 
-  const useDesktopModal = useDesktopRencontreLayout;
+  /** Carte centrée sur web ; plein écran sur iOS / Android. */
+  const useDesktopModal = Platform.OS === 'web' && useDesktopRencontreLayout;
   const modalWidth = useDesktopModal ? Math.min(DESKTOP_MODAL_WIDTH, windowWidth - 48) : windowWidth;
   const modalMaxHeight = useDesktopModal ? Math.min(720, screenHeight - 48) : screenHeight;
   const isOwnProfile = Boolean(user?.id && user.id === profile.id);
@@ -179,9 +180,9 @@ export function RencontreProfileModal({ profile, onClose, onPass, onLike }: Prop
 
     setAddingFriend(true);
     try {
-      await sendFriendRequest(user.id, profile.id);
+      await sendFriendRequest(user.id, profile.id, { fromRencontres: true });
       setFriendRelation('pending_sent');
-      const successText = `Demande envoyée à ${profile.name} 💗 Vous gagnerez 10 cœurs quand elle acceptera.`;
+      const successText = `Demande envoyée à ${profile.name} 💗`;
       setStatusMessage(successText);
       showAppAlert('Demande envoyée 💗', successText);
     } catch (e) {
@@ -247,8 +248,8 @@ export function RencontreProfileModal({ profile, onClose, onPass, onLike }: Prop
 
       {profile.tags.length > 0 ? (
         <View style={styles.tagsRow}>
-          {profile.tags.map((tag) => (
-            <View key={tag} style={[styles.tag, useDesktopModal && styles.tagWide]}>
+          {profile.tags.map((tag, index) => (
+            <View key={`${profile.id}-tag-${index}`} style={[styles.tag, useDesktopModal && styles.tagWide]}>
               <Text style={[styles.tagText, useDesktopModal && { color: colors.pink }]}>{tag}</Text>
             </View>
           ))}
@@ -338,11 +339,16 @@ export function RencontreProfileModal({ profile, onClose, onPass, onLike }: Prop
 
   const modalBody = (
     <>
-      <View style={[styles.photoWrap, useDesktopModal && { height: DESKTOP_PHOTO_HEIGHT }]}>
-        <Image
-          source={{ uri: profile.photoUrl }}
+      <View
+        style={[
+          styles.photoWrap,
+          useDesktopModal ? { height: DESKTOP_PHOTO_HEIGHT } : styles.photoWrapFullscreen,
+        ]}
+      >
+        <RencontreProfilePhoto
+          uri={profile.photoUrl}
           style={useDesktopModal ? styles.photoDesktop : StyleSheet.absoluteFillObject}
-          contentFit="cover"
+          placeholderColor={profile.color}
         />
         {!useDesktopModal ? (
           <LinearGradient
@@ -449,7 +455,7 @@ export function RencontreProfileModal({ profile, onClose, onPass, onLike }: Prop
       {useDesktopModal ? (
         desktopSheet
       ) : (
-        <View style={styles.backdrop}>{modalBody}</View>
+        <View style={styles.backdropMobile}>{modalBody}</View>
       )}
     </Modal>
   );
@@ -460,6 +466,14 @@ function buildStyles(c: AppColors) {
     backdrop: {
       flex: 1,
       backgroundColor: c.bg,
+    },
+    backdropMobile: {
+      flex: 1,
+      backgroundColor: c.bg,
+      position: 'relative',
+    },
+    photoWrapFullscreen: {
+      ...StyleSheet.absoluteFillObject,
     },
     backdropWide: {
       flex: 1,
@@ -542,6 +556,7 @@ function buildStyles(c: AppColors) {
       letterSpacing: -0.5,
     },
     age: {
+      color: TV_COLORS.white,
       fontSize: 28,
       fontWeight: '600',
     },

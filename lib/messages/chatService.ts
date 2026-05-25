@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/supabaseClient';
+import { pushNotifyNewMessage } from '@/lib/notifications/pushNotify';
 
 export type ChatMessage = {
   id: string;
@@ -77,7 +78,16 @@ export async function sendTextMessage(params: {
     .single();
 
   if (error) throw error;
-  return data as ChatMessage;
+  const message = data as ChatMessage;
+
+  void pushNotifyNewMessage(
+    params.receiverId,
+    params.senderId,
+    params.conversationId,
+    trimmed,
+  );
+
+  return message;
 }
 
 export async function markMessagesAsRead(

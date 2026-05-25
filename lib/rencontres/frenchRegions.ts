@@ -1,5 +1,7 @@
 /** Régions administratives françaises (métropole + Corse). */
 
+import { FRENCH_DEPARTMENTS } from '@/constants/frenchDepartments';
+
 export const FRENCH_ADMIN_REGIONS = [
   'Auvergne-Rhône-Alpes',
   'Bourgogne-Franche-Comté',
@@ -327,8 +329,29 @@ export function getAdminRegionForDepartment(
   department: string | null | undefined,
 ): FrenchAdminRegion | null {
   if (!department?.trim()) return null;
-  const key = normalizeLocationKey(department);
-  return DEPT_TO_REGION[key] ?? null;
+  const raw = department.trim();
+
+  // Format profil EntreMeres : « 22 - Côtes-d'Armor »
+  const entreMeresFormat = raw.match(/^(\d{2,3}|2[ABab])\s*-\s*(.+)$/);
+  if (entreMeresFormat) {
+    const [, code, name] = entreMeresFormat;
+    return (
+      DEPT_TO_REGION[normalizeLocationKey(code)] ??
+      DEPT_TO_REGION[normalizeLocationKey(name)] ??
+      null
+    );
+  }
+
+  const key = normalizeLocationKey(raw);
+  if (DEPT_TO_REGION[key]) return DEPT_TO_REGION[key];
+
+  // Anciens profils : région administrative directement (« Bretagne », « PACA », …)
+  for (const region of FRENCH_ADMIN_REGIONS) {
+    if (normalizeLocationKey(region) === key) return region;
+    if (normalizeLocationKey(getRegionDisplayLabel(region)) === key) return region;
+  }
+
+  return null;
 }
 
 export function getRegionDisplayLabel(region: FrenchAdminRegion): string {
@@ -339,3 +362,22 @@ export function getRegionDisplayLabel(region: FrenchAdminRegion): string {
 export function getDepartmentDbValuesForAdminRegion(region: FrenchAdminRegion): string[] {
   return REGION_DB_VARIANTS.get(region) ?? [];
 }
+
+function enrichDbVariantsFromProfileLabels() {
+  for (const deptLabel of FRENCH_DEPARTMENTS) {
+    const adminRegion = getAdminRegionForDepartment(deptLabel);
+    if (!adminRegion) continue;
+    const variants = new Set(REGION_DB_VARIANTS.get(adminRegion) ?? []);
+    variants.add(deptLabel);
+    REGION_DB_VARIANTS.set(adminRegion, [...variants]);
+  }
+
+  for (const region of FRENCH_ADMIN_REGIONS) {
+    const variants = new Set(REGION_DB_VARIANTS.get(region) ?? []);
+    variants.add(region);
+    variants.add(getRegionDisplayLabel(region));
+    REGION_DB_VARIANTS.set(region, [...variants]);
+  }
+}
+
+enrichDbVariantsFromProfileLabels();

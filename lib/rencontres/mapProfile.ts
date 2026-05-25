@@ -9,16 +9,31 @@ function colorFromId(id: string): string {
   return CARD_COLORS[hash] ?? CARD_COLORS[0];
 }
 
-function buildTags(row: ProfileRow): string[] {
-  const tags: string[] = [];
-  if (row.status?.trim()) tags.push(row.status.trim());
-  if (row.job?.trim()) tags.push(row.job.trim());
-  if (row.children?.trim()) tags.push(row.children.trim());
-  return tags.slice(0, 3);
+function formatChildrenTag(raw: string | null | undefined): string | null {
+  const value = raw?.trim();
+  if (!value) return null;
+
+  if (value === '4+') return '4 enfants ou plus';
+
+  const n = parseInt(value, 10);
+  if (Number.isFinite(n) && n > 0) {
+    return n === 1 ? '1 enfant' : `${n} enfants`;
+  }
+
+  return null;
 }
 
-export function mapProfileToMaman(row: ProfileRow): MamanRencontre | null {
-  if (!row.photo?.trim()) return null;
+function buildTags(row: ProfileRow): string[] {
+  const childrenTag = formatChildrenTag(row.children);
+  return childrenTag ? [childrenTag] : [];
+}
+
+export function mapProfileToMaman(
+  row: ProfileRow,
+  options?: { allowWithoutPhoto?: boolean },
+): MamanRencontre | null {
+  const photo = row.photo?.trim() ?? '';
+  if (!photo && !options?.allowWithoutPhoto) return null;
 
   const name = row.username?.trim() || 'Maman';
   const country = row.country?.trim() || null;
@@ -35,7 +50,7 @@ export function mapProfileToMaman(row: ProfileRow): MamanRencontre | null {
     region,
     bio: row.bio?.trim() || 'Découvrez son profil sur EntreMeres.',
     tags: buildTags(row),
-    photoUrl: row.photo.trim(),
+    photoUrl: photo,
     color: colorFromId(row.id),
     createdAt: row.created_at,
   };

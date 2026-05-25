@@ -25,22 +25,38 @@ import { useTheme } from '@/context/ThemeContext';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import { useSosMamanFeed } from '@/hooks/useSosMaman';
+import { useProfileLocationFilters } from '@/hooks/useProfileLocationFilters';
 import type { SosMamanPost, SosMamanPostType } from '@/lib/sos-maman/types';
 import { SOS_POST_TYPES, getPostTypeMeta } from '@/lib/sos-maman/constants';
 import { showSosContentActions } from './sosMamanActions';
 import { SosPostCard } from './SosPostCard';
 import { SosMamanDesktopView } from './SosMamanDesktopView';
+import { CollapsibleLocationFilters } from '@/components/shared/CollapsibleLocationFilters';
 import { MAX_SOS_POST_PHOTOS, pickSosPhotos, takeSosPhoto } from '@/lib/sos-maman/pickSosPhotos';
 import { globalEvents, EVENT_TYPES } from '@/events';
 import { markSosFeedSeen } from '@/lib/sos-maman/sosMamanService';
-import { TAB_BAR_CLEARANCE } from '@/constants/tabBarLayout';
+import { useTabBarClearance } from '@/hooks/useTabBarLayout';
+import { RencontreProfileModal } from '@/components/rencontres/RencontreProfileModal';
+import { fetchMamanRencontreByUserId } from '@/lib/rencontres/fetchMamanProfile';
+import type { MamanRencontre } from '@/lib/rencontres/types';
 
 export function SosMamanScreen() {
   const insets = useSafeAreaInsets();
+  const tabBarClearance = useTabBarClearance();
   const router = useRouter();
   const { colors, isLight } = useTheme();
   const styles = useThemedStyles(buildStyles);
   const { useDesktopAppLayout } = useResponsiveLayout();
+  const {
+    countries,
+    regions,
+    selectedCountry,
+    selectedRegion,
+    onCountryChange,
+    onRegionChange,
+    locationFilter,
+    hasLocationFilter,
+  } = useProfileLocationFilters({ withRegion: false });
   const {
     posts,
     loading,
@@ -53,7 +69,7 @@ export function SosMamanScreen() {
     editPost,
     reportPost,
     currentUserId,
-  } = useSosMamanFeed();
+  } = useSosMamanFeed(locationFilter);
   const [showCompose, setShowCompose] = useState(false);
   const [editingPost, setEditingPost] = useState<SosMamanPost | null>(null);
   const [draft, setDraft] = useState('');
@@ -62,6 +78,8 @@ export function SosMamanScreen() {
   const [anonymous, setAnonymous] = useState(false);
   const [photoUris, setPhotoUris] = useState<string[]>([]);
   const [publishing, setPublishing] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState<MamanRencontre | null>(null);
+  const [loadingAuthorProfile, setLoadingAuthorProfile] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -137,6 +155,30 @@ export function SosMamanScreen() {
   const openThread = (post: SosMamanPost) => {
     router.push(`/sos-maman/${post.id}`);
   };
+
+  const handlePressAuthor = useCallback(
+    async (post: SosMamanPost) => {
+      if (post.is_anonymous || !post.user_id) return;
+      if (post.user_id === currentUserId) {
+        router.push('/(tabs)/profil');
+        return;
+      }
+      setLoadingAuthorProfile(true);
+      try {
+        const profile = await fetchMamanRencontreByUserId(post.user_id);
+        if (profile) {
+          setSelectedProfile(profile);
+        } else {
+          Alert.alert('Profil indisponible', 'Ce profil n’est pas accessible pour le moment.');
+        }
+      } catch (e) {
+        Alert.alert('Erreur', e instanceof Error ? e.message : 'Impossible d’ouvrir ce profil.');
+      } finally {
+        setLoadingAuthorProfile(false);
+      }
+    },
+    [currentUserId, router],
+  );
 
   const handlePostMenu = useCallback(
     (post: SosMamanPost) => {
@@ -316,7 +358,7 @@ export function SosMamanScreen() {
   );
 
   return (
-    <View style={[styles.screen, { paddingTop: useDesktopAppLayout ? 0 : insets.top }]}>
+    <View style={[styles.screen, { paddingTop: insets.top }]}>
       <StatusBar barStyle={isLight ? 'dark-content' : 'light-content'} backgroundColor={colors.bg} />
 
       {useDesktopAppLayout ? (
@@ -332,7 +374,15 @@ export function SosMamanScreen() {
           onRefresh={refresh}
           onPressPost={openThread}
           onMenuPost={handlePostMenu}
+          onPressAuthor={handlePressAuthor}
           onPublish={() => setShowCompose(true)}
+          countries={countries}
+          regions={regions}
+          selectedCountry={selectedCountry}
+          selectedRegion={selectedRegion}
+          onCountryChange={onCountryChange}
+          onRegionChange={onRegionChange}
+          hasLocationFilter={hasLocationFilter}
         />
       ) : (
         <>
@@ -360,18 +410,36 @@ export function SosMamanScreen() {
               keyExtractor={(item) => item.id}
               contentContainerStyle={{
                 paddingHorizontal: 16,
-                paddingBottom: TAB_BAR_CLEARANCE + insets.bottom + 80,
+                paddingBottom: tabBarClearance + insets.bottom + 80,
                 flexGrow: 1,
               }}
               refreshControl={
                 <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.pink} />
+              }
+              ListHeaderComponent={
+                <CollapsibleLocationFilters
+                  colors={colors}
+                  storageKey="sos_maman_filters_expanded"
+                  countries={countries}
+                  regions={regions}
+                  selectedCountry={selectedCountry}
+                  selectedRegion={selectedRegion}
+                  onCountryChange={onCountryChange}
+                  onRegionChange={onRegionChange}
+                  countLabel={`${posts.length} publication${posts.length !== 1 ? 's' : ''}`}
+                  variant="minimal"
+                  showCountLabel={false}
+                  showRegionFilter={false}
+                />
               }
               ListEmptyComponent={
                 <View style={styles.empty}>
                   <Ionicons name="heart-outline" size={48} color={colors.textMuted} />
                   <Text style={styles.emptyText}>
                     {error ??
-                      'Posez une question, lancez un sondage ou partagez une confidence.\nLes mamans sont là pour vous 💗'}
+                      (hasLocationFilter
+                        ? 'Aucune publication ne correspond à ces filtres pour le moment.'
+                        : 'Posez une question, lancez un sondage ou partagez une confidence.\nLes mamans sont là pour vous 💗')}
                   </Text>
                 </View>
               }
@@ -383,13 +451,14 @@ export function SosMamanScreen() {
                   variant="mobile"
                   onPress={() => openThread(item)}
                   onMenu={handlePostMenu}
+                  onPressAuthor={handlePressAuthor}
                 />
               )}
             />
           )}
 
           <TouchableOpacity
-            style={[styles.fab, { bottom: TAB_BAR_CLEARANCE + insets.bottom + 12 }]}
+            style={[styles.fab, { bottom: tabBarClearance + insets.bottom + 12 }]}
             onPress={() => setShowCompose(true)}
             activeOpacity={0.9}
           >
@@ -400,6 +469,17 @@ export function SosMamanScreen() {
       )}
 
       {composeModal}
+
+      {loadingAuthorProfile ? (
+        <View style={styles.profileLoader}>
+          <ActivityIndicator size="large" color={colors.pink} />
+        </View>
+      ) : null}
+
+      <RencontreProfileModal
+        profile={selectedProfile}
+        onClose={() => setSelectedProfile(null)}
+      />
     </View>
   );
 }
@@ -426,6 +506,13 @@ function buildStyles(c: AppColors) {
       elevation: 8,
     },
     fabText: { color: c.onPink, fontWeight: '700', fontSize: 15 },
+    profileLoader: {
+      ...StyleSheet.absoluteFillObject,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'rgba(0,0,0,0.25)',
+      zIndex: 20,
+    },
     empty: { alignItems: 'center', paddingTop: 48, paddingHorizontal: 24 },
     emptyText: { color: c.textMuted, textAlign: 'center', marginTop: 12, lineHeight: 22 },
     setupBox: { padding: 24, alignItems: 'center' },

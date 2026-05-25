@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tabs } from 'expo-router';
+import { Tabs, Redirect } from 'expo-router';
 import { View, ActivityIndicator, Platform } from 'react-native';
 import { CustomTabBar } from '@/components/CustomTabBar';
 import { WebTopNav } from '@/components/WebTopNav';
@@ -19,7 +19,7 @@ export default function TabLayout() {
   }
 
   if (!session) {
-    return <View style={{ flex: 1, backgroundColor: colors.bg }} />;
+    return <Redirect href="/login" />;
   }
 
   return (

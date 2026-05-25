@@ -14,6 +14,8 @@ import {
 
   TouchableOpacity,
 
+  Pressable,
+
   ActivityIndicator,
 
   Switch,
@@ -51,6 +53,10 @@ import { SosPostTypeBadge } from '@/components/sos-maman/SosPostTypeBadge';
 import { SosPollBlock } from '@/components/sos-maman/SosPollBlock';
 import { SosPostImages } from '@/components/sos-maman/SosPostImages';
 import { DisplayNameWithTier } from '@/components/gamification/DisplayNameWithTier';
+import { AvatarWithCountryFlag } from '@/components/ui/AvatarWithCountryFlag';
+import { RencontreProfileModal } from '@/components/rencontres/RencontreProfileModal';
+import { fetchMamanRencontreByUserId } from '@/lib/rencontres/fetchMamanProfile';
+import type { MamanRencontre } from '@/lib/rencontres/types';
 
 import type { SosMamanReply } from '@/lib/sos-maman/types';
 
@@ -111,6 +117,52 @@ export default function SosMamanThreadScreen() {
   const [editDraft, setEditDraft] = useState('');
 
   const [savingEdit, setSavingEdit] = useState(false);
+
+  const [selectedProfile, setSelectedProfile] = useState<MamanRencontre | null>(null);
+
+  const [loadingAuthorProfile, setLoadingAuthorProfile] = useState(false);
+
+
+
+  const handlePressAuthor = useCallback(async () => {
+
+    if (!post || post.is_anonymous || !post.user_id) return;
+
+    if (post.user_id === currentUserId) {
+
+      router.push('/(tabs)/profil');
+
+      return;
+
+    }
+
+    setLoadingAuthorProfile(true);
+
+    try {
+
+      const profile = await fetchMamanRencontreByUserId(post.user_id);
+
+      if (profile) {
+
+        setSelectedProfile(profile);
+
+      } else {
+
+        Alert.alert('Profil indisponible', 'Ce profil n’est pas accessible pour le moment.');
+
+      }
+
+    } catch (e) {
+
+      Alert.alert('Erreur', e instanceof Error ? e.message : 'Impossible d’ouvrir ce profil.');
+
+    } finally {
+
+      setLoadingAuthorProfile(false);
+
+    }
+
+  }, [post, currentUserId, router]);
 
 
 
@@ -374,11 +426,47 @@ export default function SosMamanThreadScreen() {
 
           <SosPostTypeBadge type={post.post_type} />
 
-          <DisplayNameWithTier
+          <View style={styles.confessionAuthorRow}>
+
+            {!post.is_anonymous ? (
+
+              <Pressable
+
+                onPress={handlePressAuthor}
+
+                accessibilityRole="button"
+
+                accessibilityLabel={`Voir le profil de ${post.author_name}`}
+
+                style={({ pressed }) => [pressed && styles.avatarPressed]}
+
+              >
+
+                <AvatarWithCountryFlag
+
+                  colors={colors}
+
+                  photoUri={post.author_photo}
+
+                  country={post.author_country}
+
+                  size={44}
+
+                  showFlag
+
+                />
+
+              </Pressable>
+
+            ) : null}
+
+            <DisplayNameWithTier
             name={post.author_name}
             tierEmoji={post.author_tier_emoji}
             style={styles.confessionAuthor}
           />
+
+          </View>
 
           {post.content ? <Text style={styles.confessionContent}>{post.content}</Text> : null}
 
@@ -585,6 +673,28 @@ export default function SosMamanThreadScreen() {
 
       </Modal>
 
+
+
+      {loadingAuthorProfile ? (
+
+        <View style={styles.profileLoader}>
+
+          <ActivityIndicator size="large" color={colors.pink} />
+
+        </View>
+
+      ) : null}
+
+
+
+      <RencontreProfileModal
+
+        profile={selectedProfile}
+
+        onClose={() => setSelectedProfile(null)}
+
+      />
+
     </KeyboardAvoidingView>
 
   );
@@ -643,7 +753,35 @@ function buildStyles(c: AppColors) {
 
   confessionLabel: { color: c.pink, fontSize: 12, fontWeight: '700', textTransform: 'uppercase' },
 
-  confessionAuthor: { color: c.text, fontSize: 16, fontWeight: '700', marginTop: 6 },
+  confessionAuthorRow: {
+
+    flexDirection: 'row',
+
+    alignItems: 'center',
+
+    gap: 12,
+
+    marginTop: 6,
+
+  },
+
+  confessionAuthor: { color: c.text, fontSize: 16, fontWeight: '700', flex: 1 },
+
+  avatarPressed: { opacity: 0.75 },
+
+  profileLoader: {
+
+    ...StyleSheet.absoluteFillObject,
+
+    alignItems: 'center',
+
+    justifyContent: 'center',
+
+    backgroundColor: 'rgba(0,0,0,0.25)',
+
+    zIndex: 20,
+
+  },
 
   confessionContent: { color: c.text, fontSize: 16, lineHeight: 24, marginTop: 10 },
 

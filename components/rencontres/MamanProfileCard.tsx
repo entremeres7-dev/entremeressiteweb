@@ -1,11 +1,11 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
-import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import type { AppColors } from '@/constants/themes';
 import { cardElevation } from '@/constants/themeUtils';
 import { DisplayNameWithTier } from '@/components/gamification/DisplayNameWithTier';
+import { RencontreProfilePhoto, RENCONTRE_PHOTO_ASPECT } from './RencontreProfilePhoto';
 import type { MamanRencontre } from '@/lib/rencontres/types';
 
 type Variant = 'mobile' | 'desktop';
@@ -44,7 +44,7 @@ export function MamanProfileCard({
         activeOpacity={0.92}
       >
         <View style={desktopStyles.photoWrap}>
-          <Image source={{ uri: item.photoUrl }} style={desktopStyles.photo} contentFit="cover" />
+          <RencontreProfilePhoto uri={item.photoUrl} style={desktopStyles.photo} />
           <LinearGradient
             colors={['transparent', 'rgba(0,0,0,0.15)', 'rgba(0,0,0,0.88)']}
             style={StyleSheet.absoluteFill}
@@ -66,8 +66,8 @@ export function MamanProfileCard({
             </View>
             {item.tags.length > 0 ? (
               <View style={desktopStyles.tagsRow}>
-                {item.tags.slice(0, 2).map((tag) => (
-                  <View key={tag} style={desktopStyles.tag}>
+                {item.tags.slice(0, 2).map((tag, index) => (
+                  <View key={`${item.id}-tag-${index}`} style={desktopStyles.tag}>
                     <Text style={desktopStyles.tagText}>{tag}</Text>
                   </View>
                 ))}
@@ -102,11 +102,7 @@ export function MamanProfileCard({
       onPress={() => onPress(item)}
       activeOpacity={0.9}
     >
-      <Image
-        source={{ uri: item.photoUrl }}
-        style={[mobileStyles.cardPhoto, { height: photoHeight }]}
-        contentFit="cover"
-      />
+      <RencontreProfilePhoto uri={item.photoUrl} style={mobileStyles.cardPhoto} />
       <View style={mobileStyles.cardBody}>
         <View style={mobileStyles.cardNameRow}>
           <DisplayNameWithTier
@@ -143,7 +139,11 @@ const mobileStyles = StyleSheet.create({
     minHeight: 220,
     borderWidth: StyleSheet.hairlineWidth,
   },
-  cardPhoto: { width: '100%' },
+  cardPhoto: {
+    width: '100%',
+    aspectRatio: RENCONTRE_PHOTO_ASPECT,
+    backgroundColor: '#111',
+  },
   cardBody: { padding: 12 },
   cardNameRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' },
   cardName: { fontSize: 15, fontWeight: '700', flexShrink: 1 },
@@ -167,7 +167,7 @@ const desktopStyles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
   },
   photoWrap: {
-    aspectRatio: 4 / 5,
+    aspectRatio: RENCONTRE_PHOTO_ASPECT,
     position: 'relative',
     backgroundColor: '#111',
   },

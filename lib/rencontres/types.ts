@@ -20,6 +20,8 @@ export type RencontreLocationFilter = {
   country: string | null;
   /** Libellé région affiché (ex. PACA, Île-de-France) — filtre les départements associés */
   adminRegionLabel: string | null;
+  /** Recherche par pseudo (≥ 2 caractères). */
+  usernameQuery?: string;
 };
 
 export type MamanRencontre = {

@@ -3,13 +3,14 @@ import { useRouter } from 'expo-router';
 import { AuthScreenLayout } from '@/components/auth/AuthScreenLayout';
 import { LoginForm } from '@/components/auth/LoginForm';
 
+const LOGIN_LOGO = require('@/assets/images/logo3.png');
+
 export default function LoginScreen() {
   const router = useRouter();
 
   return (
-    <AuthScreenLayout>
+    <AuthScreenLayout heroLogoSource={LOGIN_LOGO} heroLogoHeight={58}>
       <LoginForm
-        onSuccess={() => router.replace('/(tabs)/accueil')}
         onGoSignup={() => router.push('/signup')}
       />
     </AuthScreenLayout>

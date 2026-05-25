@@ -7,6 +7,7 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, usePathname } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,6 +21,8 @@ import {
   VISIBLE_TABS,
   type AppTabName,
 } from '@/lib/navigation/appTabs';
+
+const WEB_LOGO = require('@/assets/images/logo2.png');
 
 function createStyles(c: AppColors) {
   return StyleSheet.create({
@@ -42,31 +45,11 @@ function createStyles(c: AppColors) {
       minHeight: 56,
     },
     brand: {
-      flexDirection: 'row',
-      alignItems: 'baseline',
-      gap: 2,
       flexShrink: 0,
     },
-    brandEntre: {
-      color: c.text,
-      fontSize: 18,
-      fontWeight: '700',
-    },
-    brandMeres: {
-      color: c.pink,
-      fontSize: 18,
-      fontWeight: '700',
-    },
-    brandBadge: {
-      marginLeft: 6,
-      fontSize: 10,
-      fontWeight: '800',
-      color: c.onPink,
-      backgroundColor: c.pink,
-      paddingHorizontal: 6,
-      paddingVertical: 2,
-      borderRadius: 4,
-      overflow: 'hidden',
+    brandLogo: {
+      height: 40,
+      width: 200,
     },
     navScroll: {
       flexGrow: 1,
@@ -156,9 +139,12 @@ export function WebTopNav() {
           accessibilityRole="button"
           accessibilityLabel="EntreMeres TV — Accueil"
         >
-          <Text style={styles.brandEntre}>Entre</Text>
-          <Text style={styles.brandMeres}>Meres</Text>
-          <Text style={styles.brandBadge}>TV</Text>
+          <Image
+            source={WEB_LOGO}
+            style={styles.brandLogo}
+            contentFit="contain"
+            accessibilityLabel="EntreMeres TV"
+          />
         </TouchableOpacity>
 
         <ScrollView

@@ -11,6 +11,7 @@ import { ThemeStatusBar } from '@/components/ThemeStatusBar';
 import { ActionSheetHost } from '@/components/ui/ActionSheetHost';
 import { TvAvailabilityModalHost } from '@/components/tv/TvAvailabilityModalHost';
 import { IntroVideoGate } from '@/components/intro/IntroVideoGate';
+import { PushNotificationHandler } from '@/components/push/PushNotificationHandler';
 
 export default function RootLayout() {
   return (
@@ -20,6 +21,7 @@ export default function RootLayout() {
           <AuthProvider>
             <TabBarVisibilityProvider>
               <IntroVideoGate>
+              <PushNotificationHandler />
               <ThemeStatusBar />
               <ActionSheetHost />
               <TvAvailabilityModalHost />

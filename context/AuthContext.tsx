@@ -3,7 +3,9 @@ import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/supabaseClient';
 import { registerPushDevice, deactivatePushDevice } from '@/lib/push/registerPushDevice';
 import { ensureUserProfile } from '@/lib/profile/ensureUserProfile';
-import { requestShowAuthPhase } from '@/lib/onboarding/onboardingPhase';
+import { redirectToLogin } from '@/lib/auth/redirectToLogin';
+import { syncNotificationPreferencesFromServer } from '@/lib/settings/notificationPreferences';
+import { clearSignupWelcomePending, markSignupWelcomePendingSync } from '@/lib/onboarding/signupWelcome';
 
 export type UserProfile = {
   id: string;
@@ -53,24 +55,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     const p = await fetchProfile(userId);
     setProfile(p);
+
+    void syncNotificationPreferencesFromServer(userId)
+      .then((prefs) => {
+        if (prefs.pushEnabled) registerPushDevice(userId).catch(() => {});
+      })
+      .catch(() => {});
   };
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       if (data.session?.user) {
-        loadProfile(data.session.user.id).finally(() => setLoading(false));
-        registerPushDevice(data.session.user.id).catch(() => {});
-      } else {
-        setLoading(false);
+        void loadProfile(data.session.user.id);
       }
+      setLoading(false);
     });
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       setSession(nextSession);
       if (nextSession?.user) {
         loadProfile(nextSession.user.id);
-        registerPushDevice(nextSession.user.id).catch(() => {});
       } else {
         setProfile(null);
       }
@@ -80,13 +85,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-    return { error: error?.message ?? null };
+    await clearSignupWelcomePending();
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+    if (error) return { error: error.message };
+    if (data.session) {
+      setSession(data.session);
+      void loadProfile(data.session.user.id);
+    }
+    return { error: null };
   };
 
   const signUp = async (email: string, password: string, username: string) => {
     const trimmedEmail = email.trim();
     const trimmedUsername = username.trim();
+
+    markSignupWelcomePendingSync();
 
     const { data, error } = await supabase.auth.signUp({
       email: trimmedEmail,
@@ -94,7 +110,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       options: { data: { username: trimmedUsername } },
     });
 
-    if (error) return { error: error.message, signedIn: false };
+    if (error) {
+      await clearSignupWelcomePending();
+      return { error: error.message, signedIn: false };
+    }
 
     const userId = data.session?.user?.id ?? data.user?.id;
 
@@ -105,6 +124,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (signInError) {
+        await clearSignupWelcomePending();
         const msg = signInError.message.toLowerCase();
         if (msg.includes('confirm') || msg.includes('vérifi') || msg.includes('verif')) {
           return {
@@ -116,12 +136,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error: signInError.message, signedIn: false };
       }
 
+      if (signInData.session) {
+        setSession(signInData.session);
+      }
+
       const uid = signInData.session?.user?.id ?? signInData.user?.id;
       if (uid) {
         await ensureUserProfile(uid);
         await loadProfile(uid);
       }
       return { error: null, signedIn: true };
+    }
+
+    if (data.session) {
+      setSession(data.session);
     }
 
     await ensureUserProfile(userId);
@@ -134,7 +162,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (uid) await deactivatePushDevice(uid).catch(() => {});
     await supabase.auth.signOut();
     setProfile(null);
-    requestShowAuthPhase();
+    redirectToLogin();
   };
 
   const value = useMemo(

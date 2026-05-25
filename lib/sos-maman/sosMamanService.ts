@@ -1,6 +1,11 @@
 import { supabase } from '@/supabaseClient';
 
 import { pushNotifySosMamanReply } from '@/lib/notifications/notifySosMamanReply';
+import {
+  applyProfileLocationFilter,
+  hasProfileLocationFilter,
+  type ProfileLocationFilter,
+} from '@/lib/rencontres/applyProfileLocationFilter';
 import { fetchUserCoeurs, tryAwardGamificationPoints } from '@/lib/gamification/gamificationService';
 import { fetchCoeursMap, parseCoeurs } from '@/lib/gamification/fetchProfilesCoeurs';
 import { tierEmojiForCoeurs } from '@/lib/gamification/tierDisplayEmoji';
@@ -69,7 +74,7 @@ const POST_SELECT = 'id, user_id, content, post_type, is_anonymous, created_at, 
 
 
 
-type ProfileSummary = { name: string; photo: string | null; coeurs: number };
+type ProfileSummary = { name: string; photo: string | null; coeurs: number; country: string | null };
 
 async function profileMap(userIds: string[]) {
 
@@ -80,7 +85,7 @@ async function profileMap(userIds: string[]) {
   const uniqueIds = Array.from(new Set(userIds));
 
   const [{ data }, coeursMap] = await Promise.all([
-    supabase.from('profiles').select('id, username, photo').in('id', uniqueIds),
+    supabase.from('profiles').select('id, username, photo, country').in('id', uniqueIds),
     fetchCoeursMap(uniqueIds),
   ]);
 
@@ -91,6 +96,7 @@ async function profileMap(userIds: string[]) {
         name: p.username?.trim() || 'Maman',
         photo: p.photo,
         coeurs: coeursMap.get(p.id) ?? parseCoeurs((p as { coeurs?: unknown }).coeurs),
+        country: (p as { country?: string | null }).country?.trim() || null,
       },
     ]),
   );
@@ -129,6 +135,7 @@ function displayAuthor(
       author_name: 'Maman anonyme',
       author_photo: null as string | null,
       author_tier_emoji: null as string | null,
+      author_country: null as string | null,
     };
   }
 
@@ -138,6 +145,7 @@ function displayAuthor(
     author_name: p?.name ?? 'Maman',
     author_photo: p?.photo ?? null,
     author_tier_emoji: tierEmojiForCoeurs(p?.coeurs),
+    author_country: p?.country ?? null,
   };
 
 }
@@ -280,17 +288,28 @@ function mapPostRow(
 
 
 
-export async function fetchSosMamanPosts(currentUserId: string): Promise<SosMamanPost[]> {
-
-  const { data: posts, error } = await supabase
-
+export async function fetchSosMamanPosts(
+  currentUserId: string,
+  locationFilter?: ProfileLocationFilter,
+): Promise<SosMamanPost[]> {
+  let query = supabase
     .from('sos_maman_posts')
-
     .select(POST_SELECT)
-
     .order('created_at', { ascending: false })
-
     .limit(80);
+
+  if (locationFilter && hasProfileLocationFilter(locationFilter)) {
+    let profileQuery = supabase.from('profiles').select('id').eq('is_hidden', false);
+    profileQuery = applyProfileLocationFilter(profileQuery, locationFilter);
+    const { data: profiles, error: profileError } = await profileQuery;
+    if (profileError) throw profileError;
+
+    const authorIds = (profiles ?? []).map((p) => p.id);
+    if (!authorIds.length) return [];
+    query = query.in('user_id', authorIds);
+  }
+
+  const { data: posts, error } = await query;
 
 
 

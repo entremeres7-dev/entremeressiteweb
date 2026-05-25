@@ -23,7 +23,6 @@ import { usePendingFriendsCount } from '@/hooks/usePendingFriendsCount';
 import { useUnreadMessagesCount } from '@/hooks/useUnreadMessagesCount';
 import { useGamification } from '@/hooks/useGamification';
 import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
-import { requestShowAuthPhase } from '@/lib/onboarding/onboardingPhase';
 import { DesktopContent } from '@/components/ui/DesktopContent';
 import { GamificationSection } from './GamificationSection';
 import { ProfileAvatarRing } from './ProfileAvatarRing';
@@ -105,8 +104,6 @@ export function ProfilScreen() {
         style: 'destructive',
         onPress: async () => {
           await signOut();
-          requestShowAuthPhase();
-          router.replace('/');
         },
       },
     ]);

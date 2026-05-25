@@ -1,195 +1,180 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Platform, useWindowDimensions } from 'react-native';
-import { Image } from 'expo-image';
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import type { AppColors } from '@/constants/themes';
 import { cardElevation } from '@/constants/themeUtils';
 import { DisplayNameWithTier } from '@/components/gamification/DisplayNameWithTier';
+import { RencontreProfilePhoto, RENCONTRE_PHOTO_ASPECT } from './RencontreProfilePhoto';
 import type { MamanRencontre } from '@/lib/rencontres/types';
 
 type Props = {
   item: MamanRencontre;
   colors: AppColors;
   onPress: (m: MamanRencontre) => void;
+  columns?: 2 | 3;
 };
 
-export function MamanProfileRow({ item, colors, onPress }: Props) {
-  const { width } = useWindowDimensions();
-  const compact = width < 640;
-
+export function MamanProfileRow({ item, colors, onPress, columns = 2 }: Props) {
   return (
     <TouchableOpacity
       style={[
-        styles.row,
-        compact && styles.rowCompact,
-        {
-          backgroundColor: colors.card,
-          borderColor: colors.border,
-          ...(Platform.OS === 'web' ? ({ cursor: 'pointer' } as object) : null),
-        },
+        styles.card,
+        columns === 3 ? styles.cardThreeCol : styles.cardTwoCol,
         cardElevation(colors.bg),
+        Platform.OS === 'web' ? ({ cursor: 'pointer' } as object) : null,
       ]}
       onPress={() => onPress(item)}
-      activeOpacity={0.92}
+      activeOpacity={0.9}
     >
-      <Image
-        source={{ uri: item.photoUrl }}
-        style={[styles.photo, compact && styles.photoCompact]}
-        contentFit="cover"
-      />
-
-      <View style={styles.body}>
-        <View style={styles.titleRow}>
+      <View style={styles.photoWrap}>
+        <RencontreProfilePhoto
+          uri={item.photoUrl}
+          style={styles.photo}
+          placeholderColor={item.color}
+        />
+        <LinearGradient
+          colors={['transparent', 'rgba(0,0,0,0.2)', 'rgba(0,0,0,0.88)']}
+          locations={[0.4, 0.65, 1]}
+          style={StyleSheet.absoluteFill}
+        />
+        <View style={styles.photoTop}>
+          <View style={styles.discoverPill}>
+            <Ionicons name="sparkles" size={11} color="#fff" />
+          </View>
+        </View>
+        <View style={styles.photoOverlay}>
           <DisplayNameWithTier
             name={item.name}
             tierEmoji={item.tierEmoji}
-            style={[styles.name, { color: colors.text }]}
+            style={styles.name}
             numberOfLines={1}
           />
-          {item.age != null ? (
-            <Text style={[styles.age, { color: colors.textSecondary }]}>, {item.age} ans</Text>
-          ) : null}
+          <View style={styles.metaRow}>
+            {item.age != null ? <Text style={styles.meta}>{item.age} ans</Text> : null}
+            {item.age != null && item.city ? <Text style={styles.metaDot}>·</Text> : null}
+            <Ionicons name="location-outline" size={11} color="rgba(255,255,255,0.9)" />
+            <Text style={styles.meta} numberOfLines={1}>
+              {item.city}
+            </Text>
+          </View>
         </View>
+      </View>
 
-        <View style={styles.locationRow}>
-          <Ionicons name="location-outline" size={14} color={colors.pink} />
-          <Text style={[styles.city, { color: colors.textSecondary }]} numberOfLines={1}>
-            {item.city}
-          </Text>
-        </View>
-
+      <View style={[styles.footer, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
         <Text style={[styles.bio, { color: colors.textSecondary }]} numberOfLines={2}>
           {item.bio}
         </Text>
-
         {item.tags.length > 0 ? (
           <View style={styles.tagsRow}>
-            {item.tags.slice(0, 3).map((tag) => (
-              <View key={tag} style={[styles.tag, { backgroundColor: colors.pinkSoft, borderColor: colors.border }]}>
-                <Text style={[styles.tagText, { color: colors.pink }]}>{tag}</Text>
+            {item.tags.slice(0, 2).map((tag, index) => (
+              <View
+                key={`${item.id}-tag-${index}`}
+                style={[styles.tag, { backgroundColor: colors.pinkSoft, borderColor: colors.border }]}
+              >
+                <Text style={[styles.tagText, { color: colors.pink }]} numberOfLines={1}>
+                  {tag}
+                </Text>
               </View>
             ))}
           </View>
         ) : null}
       </View>
-
-      {!compact ? (
-        <View style={styles.actions}>
-          <View style={[styles.primaryBtn, { backgroundColor: colors.pink }]}>
-            <Text style={[styles.primaryBtnText, { color: colors.onPink }]}>Voir le profil</Text>
-            <Ionicons name="arrow-forward" size={15} color={colors.onPink} />
-          </View>
-          <Text style={[styles.hint, { color: colors.textMuted }]}>Cliquez pour ouvrir</Text>
-        </View>
-      ) : (
-        <View style={[styles.primaryBtn, styles.primaryBtnCompact, { backgroundColor: colors.pink }]}>
-          <Text style={[styles.primaryBtnText, { color: colors.onPink }]}>Voir le profil</Text>
-          <Ionicons name="arrow-forward" size={15} color={colors.onPink} />
-        </View>
-      )}
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 20,
-    padding: 18,
-    borderRadius: 16,
-    borderWidth: StyleSheet.hairlineWidth,
+  card: {
+    borderRadius: 20,
+    overflow: 'hidden',
     marginBottom: 12,
+    backgroundColor: '#111',
   },
-  rowCompact: {
-    flexDirection: 'column',
-    alignItems: 'stretch',
-    gap: 14,
+  cardTwoCol: {
+    width: '48.2%',
+  },
+  cardThreeCol: {
+    width: '31.5%',
+  },
+  photoWrap: {
+    aspectRatio: RENCONTRE_PHOTO_ASPECT,
+    position: 'relative',
+    backgroundColor: '#111',
   },
   photo: {
-    width: 96,
-    height: 96,
-    borderRadius: 16,
-    backgroundColor: '#111',
-    flexShrink: 0,
-  },
-  photoCompact: {
     width: '100%',
-    height: 180,
+    height: '100%',
   },
-  body: {
-    flex: 1,
-    minWidth: 0,
-    gap: 6,
+  photoTop: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
   },
-  titleRow: {
-    flexDirection: 'row',
+  discoverPill: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: 'center',
-    flexWrap: 'wrap',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  photoOverlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: 11,
+    paddingBottom: 11,
+    gap: 3,
   },
   name: {
-    fontSize: 20,
+    color: '#fff',
+    fontSize: 15,
     fontWeight: '800',
-    letterSpacing: -0.3,
+    letterSpacing: -0.2,
   },
-  age: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  locationRow: {
+  metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 3,
   },
-  city: {
-    fontSize: 14,
-    fontWeight: '500',
+  meta: {
+    color: 'rgba(255,255,255,0.92)',
+    fontSize: 11,
+    fontWeight: '600',
     flexShrink: 1,
   },
+  metaDot: {
+    color: 'rgba(255,255,255,0.55)',
+    fontSize: 11,
+  },
+  footer: {
+    paddingHorizontal: 11,
+    paddingVertical: 9,
+    gap: 7,
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
   bio: {
-    fontSize: 14,
-    lineHeight: 21,
-    marginTop: 2,
+    fontSize: 11,
+    lineHeight: 16,
   },
   tagsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
-    marginTop: 4,
+    gap: 5,
   },
   tag: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
     borderRadius: 999,
     borderWidth: 1,
+    maxWidth: '100%',
   },
   tagText: {
-    fontSize: 11,
+    fontSize: 9,
     fontWeight: '700',
-  },
-  actions: {
-    alignItems: 'flex-end',
-    gap: 8,
-    flexShrink: 0,
-    minWidth: 140,
-  },
-  primaryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 16,
-    paddingVertical: 11,
-    borderRadius: 999,
-  },
-  primaryBtnCompact: {
-    alignSelf: 'stretch',
-    justifyContent: 'center',
-  },
-  primaryBtnText: {
-    fontSize: 13,
-    fontWeight: '800',
-  },
-  hint: {
-    fontSize: 11,
   },
 });

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,8 @@ import { useAuth } from '@/context/AuthContext';
 import type { AppColors } from '@/constants/themes';
 import { useTheme } from '@/context/ThemeContext';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { AuthTagline } from '@/components/auth/AuthTagline';
+import { useAuthScreenLayout } from '@/components/auth/authScreenLayoutContext';
 
 type Props = {
   onSuccess?: () => void;
@@ -21,10 +23,33 @@ type Props = {
 export function LoginForm({ onSuccess, onGoSignup }: Props) {
   const { signIn } = useAuth();
   const { colors } = useTheme();
-  const styles = useThemedStyles(buildStyles);
+  const { formExpanded, setFormExpanded } = useAuthScreenLayout();
+  const styles = useThemedStyles((c) => buildStyles(c, formExpanded));
+  const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
+      setFormExpanded(false);
+    };
+  }, [setFormExpanded]);
+
+  const handleInputFocus = () => {
+    if (blurTimeoutRef.current) {
+      clearTimeout(blurTimeoutRef.current);
+      blurTimeoutRef.current = null;
+    }
+    setFormExpanded(true);
+  };
+
+  const handleInputBlur = () => {
+    blurTimeoutRef.current = setTimeout(() => {
+      setFormExpanded(false);
+    }, 120);
+  };
 
   const handleLogin = async () => {
     if (!email.trim() || !password) {
@@ -43,10 +68,9 @@ export function LoginForm({ onSuccess, onGoSignup }: Props) {
 
   return (
     <View>
-      <Text style={styles.tagline}>
-        Une communauté de mamans.{'\n'}
-        <Text style={styles.taglineAccent}>Du soutien. Des rencontres.</Text>
-      </Text>
+      <View style={styles.taglineWrap}>
+        <AuthTagline compact={formExpanded} />
+      </View>
 
       <TextInput
         style={styles.input}
@@ -54,9 +78,13 @@ export function LoginForm({ onSuccess, onGoSignup }: Props) {
         placeholderTextColor={colors.textMuted}
         value={email}
         onChangeText={setEmail}
+        onFocus={handleInputFocus}
+        onBlur={handleInputBlur}
         autoCapitalize="none"
         keyboardType="email-address"
         autoComplete="email"
+        textContentType="username"
+        importantForAutofill="yes"
       />
       <TextInput
         style={styles.input}
@@ -64,8 +92,12 @@ export function LoginForm({ onSuccess, onGoSignup }: Props) {
         placeholderTextColor={colors.textMuted}
         value={password}
         onChangeText={setPassword}
+        onFocus={handleInputFocus}
+        onBlur={handleInputBlur}
         secureTextEntry
         autoComplete="password"
+        textContentType="password"
+        importantForAutofill="yes"
       />
 
       <TouchableOpacity style={styles.btn} onPress={handleLogin} disabled={loading}>
@@ -83,43 +115,31 @@ export function LoginForm({ onSuccess, onGoSignup }: Props) {
   );
 }
 
-function buildStyles(c: AppColors) {
+function buildStyles(c: AppColors, expanded: boolean) {
   return StyleSheet.create({
-    tagline: {
-      color: c.text,
-      fontSize: 22,
-      fontWeight: '700',
-      marginBottom: 28,
-      lineHeight: 30,
-      textAlign: 'center',
-      letterSpacing: 0.2,
-    },
-    taglineAccent: {
-      color: c.pink,
-      fontSize: 22,
-      fontWeight: '700',
-      lineHeight: 30,
+    taglineWrap: {
+      marginBottom: expanded ? 20 : 28,
     },
     input: {
       backgroundColor: c.surface,
-      borderRadius: 14,
-      paddingHorizontal: 16,
-      paddingVertical: 14,
+      borderRadius: expanded ? 16 : 14,
+      paddingHorizontal: expanded ? 18 : 16,
+      paddingVertical: expanded ? 18 : 14,
       color: c.text,
-      fontSize: 16,
-      marginBottom: 12,
+      fontSize: expanded ? 18 : 16,
+      marginBottom: expanded ? 16 : 12,
       borderWidth: 1,
       borderColor: c.border,
     },
     btn: {
       backgroundColor: c.pink,
       borderRadius: 28,
-      paddingVertical: 16,
+      paddingVertical: expanded ? 18 : 16,
       alignItems: 'center',
-      marginTop: 8,
+      marginTop: expanded ? 12 : 8,
     },
-    btnText: { color: c.onPink, fontSize: 17, fontWeight: '700' },
-    linkBtn: { alignItems: 'center', marginTop: 20 },
+    btnText: { color: c.onPink, fontSize: expanded ? 18 : 17, fontWeight: '700' },
+    linkBtn: { alignItems: 'center', marginTop: expanded ? 24 : 20 },
     linkText: { color: c.pink, fontSize: 15, fontWeight: '600' },
   });
 }

@@ -7,6 +7,7 @@ import {
   sendTextMessage,
   type ChatMessage,
 } from '@/lib/messages/chatService';
+import { supabase } from '@/supabaseClient';
 import { globalEvents, EVENT_TYPES } from '@/events';
 
 export function useChat(peerId: string) {
@@ -49,6 +50,61 @@ export function useChat(peerId: string) {
   useEffect(() => {
     init();
   }, [init]);
+
+  useEffect(() => {
+    if (!conversationId || !userId) return;
+
+    const upsertMessage = (row: ChatMessage) => {
+      setMessages((prev) => {
+        const index = prev.findIndex((message) => message.id === row.id);
+        if (index >= 0) {
+          const next = [...prev];
+          next[index] = row;
+          return next;
+        }
+        return [...prev, row];
+      });
+    };
+
+    const channel = supabase
+      .channel(`chat-${conversationId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `conversation_id=eq.${conversationId}`,
+        },
+        (payload) => {
+          const row = payload.new as ChatMessage;
+          upsertMessage(row);
+
+          if (row.receiver_id === userId && !row.read) {
+            void markMessagesAsRead(conversationId, userId).then(() => {
+              globalEvents.emit(EVENT_TYPES.MESSAGES_BADGE_REFRESH);
+            });
+          }
+        },
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'messages',
+          filter: `conversation_id=eq.${conversationId}`,
+        },
+        (payload) => {
+          upsertMessage(payload.new as ChatMessage);
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [conversationId, userId]);
 
   const send = useCallback(
     async (text: string) => {

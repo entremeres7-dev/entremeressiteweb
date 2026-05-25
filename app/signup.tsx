@@ -8,10 +8,7 @@ export default function SignupScreen() {
 
   return (
     <AuthScreenLayout>
-      <SignupForm
-        onSuccess={() => router.replace('/')}
-        onGoLogin={() => router.replace('/login')}
-      />
+      <SignupForm onGoLogin={() => router.replace('/login')} />
     </AuthScreenLayout>
   );
 }

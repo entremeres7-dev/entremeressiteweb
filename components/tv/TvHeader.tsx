@@ -1,10 +1,12 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import type { AppColors } from '@/constants/themes';
-import { TV_COLORS } from '@/constants/tvColors';
 import { useTheme } from '@/context/ThemeContext';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
+
+const TV_LOGO = require('@/assets/images/logo2.png');
 
 type Props = {
   onSearch?: () => void;
@@ -18,11 +20,12 @@ export function TvHeader({ onSearch, onProfile }: Props) {
   return (
     <View style={styles.header}>
       <View style={styles.logoContainer}>
-        <Text style={styles.logoEntre}>Entre</Text>
-        <Text style={styles.logoMeres}>Meres</Text>
-        <View style={styles.tvBadge}>
-          <Text style={styles.tvText}>TV</Text>
-        </View>
+        <Image
+          source={TV_LOGO}
+          style={styles.logo}
+          contentFit="contain"
+          accessibilityLabel="EntreMeres TV"
+        />
       </View>
       <View style={styles.headerRight}>
         <TouchableOpacity style={styles.iconBtn} onPress={onSearch} accessibilityLabel="Rechercher">
@@ -47,27 +50,8 @@ function buildStyles(c: AppColors) {
       paddingHorizontal: 16,
       paddingVertical: 10,
     },
-    logoContainer: { flexDirection: 'row', alignItems: 'center' },
-    logoEntre: {
-      color: c.text,
-      fontSize: 20,
-      fontWeight: '300',
-      fontStyle: 'italic',
-    },
-    logoMeres: {
-      color: c.pink,
-      fontSize: 20,
-      fontWeight: '700',
-      fontStyle: 'italic',
-    },
-    tvBadge: {
-      backgroundColor: c.pink,
-      borderRadius: 4,
-      paddingHorizontal: 6,
-      paddingVertical: 2,
-      marginLeft: 6,
-    },
-    tvText: { color: c.onPink, fontSize: 12, fontWeight: '700' },
+    logoContainer: { flexShrink: 1, marginRight: 12 },
+    logo: { height: 40, width: 200 },
     headerRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
     iconBtn: { padding: 4 },
     avatarBtn: { padding: 2 },

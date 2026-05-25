@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import { isUsernameTakenByOther } from '@/lib/profile/resolveUsername';
 import type { AppColors } from '@/constants/themes';
 import { useTheme } from '@/context/ThemeContext';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { useAuthScreenLayout } from '@/components/auth/authScreenLayoutContext';
 
 type Props = {
   onSuccess?: () => void;
@@ -22,11 +23,34 @@ type Props = {
 export function SignupForm({ onSuccess, onGoLogin }: Props) {
   const { signUp } = useAuth();
   const { colors } = useTheme();
-  const styles = useThemedStyles(buildStyles);
+  const { formExpanded, setFormExpanded } = useAuthScreenLayout();
+  const styles = useThemedStyles((c) => buildStyles(c, formExpanded));
+  const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
+      setFormExpanded(false);
+    };
+  }, [setFormExpanded]);
+
+  const handleInputFocus = () => {
+    if (blurTimeoutRef.current) {
+      clearTimeout(blurTimeoutRef.current);
+      blurTimeoutRef.current = null;
+    }
+    setFormExpanded(true);
+  };
+
+  const handleInputBlur = () => {
+    blurTimeoutRef.current = setTimeout(() => {
+      setFormExpanded(false);
+    }, 120);
+  };
 
   const handleSignup = async () => {
     if (!username.trim() || !email.trim() || password.length < 6) {
@@ -76,6 +100,8 @@ export function SignupForm({ onSuccess, onGoLogin }: Props) {
         placeholderTextColor={colors.textMuted}
         value={username}
         onChangeText={setUsername}
+        onFocus={handleInputFocus}
+        onBlur={handleInputBlur}
         autoCapitalize="none"
       />
       <TextInput
@@ -84,6 +110,8 @@ export function SignupForm({ onSuccess, onGoLogin }: Props) {
         placeholderTextColor={colors.textMuted}
         value={email}
         onChangeText={setEmail}
+        onFocus={handleInputFocus}
+        onBlur={handleInputBlur}
         autoCapitalize="none"
         keyboardType="email-address"
       />
@@ -93,6 +121,8 @@ export function SignupForm({ onSuccess, onGoLogin }: Props) {
         placeholderTextColor={colors.textMuted}
         value={password}
         onChangeText={setPassword}
+        onFocus={handleInputFocus}
+        onBlur={handleInputBlur}
         secureTextEntry
       />
 
@@ -111,41 +141,41 @@ export function SignupForm({ onSuccess, onGoLogin }: Props) {
   );
 }
 
-function buildStyles(c: AppColors) {
+function buildStyles(c: AppColors, expanded: boolean) {
   return StyleSheet.create({
     title: {
       color: c.text,
-      fontSize: 22,
+      fontSize: expanded ? 24 : 22,
       fontWeight: '700',
       textAlign: 'center',
     },
     subtitle: {
       color: c.textMuted,
-      fontSize: 15,
-      marginBottom: 24,
+      fontSize: expanded ? 16 : 15,
+      marginBottom: expanded ? 28 : 24,
       marginTop: 6,
       textAlign: 'center',
     },
     input: {
       backgroundColor: c.surface,
-      borderRadius: 14,
-      paddingHorizontal: 16,
-      paddingVertical: 14,
+      borderRadius: expanded ? 16 : 14,
+      paddingHorizontal: expanded ? 18 : 16,
+      paddingVertical: expanded ? 18 : 14,
       color: c.text,
-      fontSize: 16,
-      marginBottom: 12,
+      fontSize: expanded ? 18 : 16,
+      marginBottom: expanded ? 16 : 12,
       borderWidth: 1,
       borderColor: c.border,
     },
     btn: {
       backgroundColor: c.pink,
       borderRadius: 28,
-      paddingVertical: 16,
+      paddingVertical: expanded ? 18 : 16,
       alignItems: 'center',
-      marginTop: 8,
+      marginTop: expanded ? 12 : 8,
     },
-    btnText: { color: c.onPink, fontSize: 17, fontWeight: '700' },
-    linkBtn: { alignItems: 'center', marginTop: 20 },
+    btnText: { color: c.onPink, fontSize: expanded ? 18 : 17, fontWeight: '700' },
+    linkBtn: { alignItems: 'center', marginTop: expanded ? 24 : 20 },
     linkText: { color: c.pink, fontSize: 15, fontWeight: '600' },
   });
 }

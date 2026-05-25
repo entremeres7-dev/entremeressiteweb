@@ -13,9 +13,10 @@ import {
   voteSosMamanPoll,
 } from '@/lib/sos-maman/sosMamanService';
 import type { CreateSosMamanPostInput, SosMamanPost, SosMamanReply } from '@/lib/sos-maman/types';
+import type { ProfileLocationFilter } from '@/lib/rencontres/applyProfileLocationFilter';
 import { globalEvents, EVENT_TYPES } from '@/events';
 
-export function useSosMamanFeed() {
+export function useSosMamanFeed(locationFilter?: ProfileLocationFilter) {
   const { user } = useAuth();
   const [posts, setPosts] = useState<SosMamanPost[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,7 +32,7 @@ export function useSosMamanFeed() {
       setError(null);
       setNeedsSetup(false);
       try {
-        const list = await fetchSosMamanPosts(user.id);
+        const list = await fetchSosMamanPosts(user.id, locationFilter);
         setPosts(list);
       } catch (e) {
         const msg = e instanceof Error ? e.message : 'Erreur';
@@ -46,7 +47,7 @@ export function useSosMamanFeed() {
         setRefreshing(false);
       }
     },
-    [user?.id],
+    [user?.id, locationFilter?.country, locationFilter?.adminRegionLabel],
   );
 
   useEffect(() => {

@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -18,17 +18,9 @@ import { useTheme } from '@/context/ThemeContext';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useAuth } from '@/context/AuthContext';
 import { fetchConversations, type ConversationPreview } from '@/lib/messages/conversationsService';
+import { formatConversationListDate } from '@/lib/messages/formatMessageDate';
 
 import { TAB_BAR_CLEARANCE } from '@/constants/tabBarLayout';
-
-function formatPreviewDate(iso: string) {
-  const d = new Date(iso);
-  const now = new Date();
-  if (d.toDateString() === now.toDateString()) {
-    return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-  }
-  return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
-}
 
 export function MessagesInboxScreen() {
   const insets = useSafeAreaInsets();
@@ -41,10 +33,13 @@ export function MessagesInboxScreen() {
   const [refreshing, setRefreshing] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
-  const load = useCallback(async (isRefresh = false) => {
+  const load = useCallback(async (options?: { isRefresh?: boolean; showLoading?: boolean }) => {
     if (!user?.id) return;
+    const isRefresh = options?.isRefresh ?? false;
+    const showLoading = options?.showLoading ?? false;
+
     if (isRefresh) setRefreshing(true);
-    else setLoading(true);
+    else if (showLoading) setLoading(true);
     setError(null);
     try {
       const list = await fetchConversations(user.id);
@@ -59,9 +54,45 @@ export function MessagesInboxScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      load();
+      load({ showLoading: true });
     }, [load]),
   );
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const reload = () => {
+      void load();
+    };
+
+    const channel = supabase
+      .channel(`messages-inbox-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'messages',
+          filter: `receiver_id=eq.${user.id}`,
+        },
+        reload,
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'messages',
+          filter: `sender_id=eq.${user.id}`,
+        },
+        reload,
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, load]);
 
   const openChat = (conv: ConversationPreview) => {
     router.push({
@@ -93,7 +124,11 @@ export function MessagesInboxScreen() {
             flexGrow: 1,
           }}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={() => load(true)} tintColor={colors.pink} />
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => load({ isRefresh: true })}
+              tintColor={colors.pink}
+            />
           }
           ListEmptyComponent={
             <View style={styles.empty}>
@@ -117,7 +152,7 @@ export function MessagesInboxScreen() {
                   <Text style={styles.rowName} numberOfLines={1}>
                     {item.peerName}
                   </Text>
-                  <Text style={styles.rowTime}>{formatPreviewDate(item.lastMessageAt)}</Text>
+                  <Text style={styles.rowTime}>{formatConversationListDate(item.lastMessageAt)}</Text>
                 </View>
                 <Text style={styles.rowPreview} numberOfLines={1}>
                   {item.lastMessage}

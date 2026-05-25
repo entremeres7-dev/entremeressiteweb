@@ -29,7 +29,7 @@ export default function Index() {
   }
 
   if (!session) {
-    return <View style={styles.loader} />;
+    return <Redirect href="/login" />;
   }
 
   return <Redirect href="/(tabs)/accueil" />;

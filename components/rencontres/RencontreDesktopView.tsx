@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -9,8 +9,8 @@ import {
   RefreshControl,
   Platform,
   useWindowDimensions,
+  TextInput,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import type { AppColors } from '@/constants/themes';
 import { cardElevation } from '@/constants/themeUtils';
@@ -20,8 +20,6 @@ import { RencontreFilterChips } from './RencontreFilterChips';
 import type { MamanRencontre, RencontreFilter } from '@/lib/rencontres/types';
 import { TAB_BAR_CLEARANCE } from '@/constants/tabBarLayout';
 import { NEW_MEMBER_DAYS } from '@/hooks/useRencontreProfiles';
-
-const FILTERS_EXPANDED_KEY = 'rencontres_filters_expanded';
 
 type Props = {
   colors: AppColors;
@@ -35,11 +33,17 @@ type Props = {
   onCountryChange: (country: string | null) => void;
   onRegionChange: (region: string | null) => void;
   countLabel: string;
+  searchQuery: string;
+  onSearchQueryChange: (query: string) => void;
+  isSearching: boolean;
   displayed: MamanRencontre[];
   loading: boolean;
+  loadingMore: boolean;
   refreshing: boolean;
   error: string | null;
+  hasMore: boolean;
   onRefresh: () => void;
+  onLoadMore: () => void;
   onPressProfile: (m: MamanRencontre) => void;
 };
 
@@ -55,44 +59,34 @@ export function RencontreDesktopView({
   onCountryChange,
   onRegionChange,
   countLabel,
+  searchQuery,
+  onSearchQueryChange,
+  isSearching,
   displayed,
   loading,
+  loadingMore,
   refreshing,
   error,
+  hasMore,
   onRefresh,
+  onLoadMore,
   onPressProfile,
 }: Props) {
-  const styles = buildStyles(colors);
+  const styles = buildStyles(colors, compact);
   const { width } = useWindowDimensions();
   const compact = width < 640;
-  const isNativeMobile = Platform.OS === 'ios' || Platform.OS === 'android';
-  const useCompactFilters = compact || isNativeMobile;
-  const openHint = Platform.OS === 'web' ? 'cliquez sur une ligne' : 'appuyez sur une ligne';
+  const gridColumns: 2 | 3 = width >= 960 ? 3 : 2;
   const [filtersExpanded, setFiltersExpanded] = useState(false);
 
-  useEffect(() => {
-    AsyncStorage.getItem(FILTERS_EXPANDED_KEY).then((value) => {
-      if (value === '1') setFiltersExpanded(true);
-    });
-  }, []);
-
   const toggleFilters = useCallback(() => {
-    setFiltersExpanded((prev) => {
-      const next = !prev;
-      AsyncStorage.setItem(FILTERS_EXPANDED_KEY, next ? '1' : '0').catch(() => {});
-      return next;
-    });
+    setFiltersExpanded((prev) => !prev);
   }, []);
 
-  const filterSummary = useMemo(() => {
-    const parts: string[] = [timeFilter === 'new' ? 'Récentes' : 'Toutes'];
-    if (selectedCountry) parts.push(selectedCountry);
-    if (selectedRegion) parts.push(selectedRegion);
-    return parts.join(' · ');
-  }, [timeFilter, selectedCountry, selectedRegion]);
+  const hasGeoFilters = countries.length > 0 || (selectedCountry && regions.length > 0);
 
-  const emptyMessage =
-    timeFilter === 'new'
+  const emptyMessage = isSearching
+    ? `Aucune maman trouvée pour « ${searchQuery.trim()} ».`
+    : timeFilter === 'new'
       ? `Aucune nouvelle inscription avec photo ces ${NEW_MEMBER_DAYS} derniers jours.`
       : selectedCountry || selectedRegion
         ? 'Aucune maman ne correspond à ces filtres pour le moment.'
@@ -101,98 +95,142 @@ export function RencontreDesktopView({
   return (
     <ScrollView
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ paddingBottom: TAB_BAR_CLEARANCE + insetsBottom }}
+      contentContainerStyle={{ paddingBottom: TAB_BAR_CLEARANCE + insetsBottom + 8 }}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.pink} />
       }
+      keyboardShouldPersistTaps="handled"
     >
       <DesktopContent maxWidth={980} flex={false}>
-        <View style={[styles.pageHeader, compact && styles.pageHeaderCompact]}>
-          <View style={styles.pageHeaderLeft}>
-            <View style={[styles.iconBadge, compact && styles.iconBadgeCompact, { backgroundColor: colors.pinkSoft }]}>
-              <Ionicons name="people" size={compact ? 20 : 24} color={colors.pink} />
+        <View style={[styles.hero, { backgroundColor: colors.pinkSoft, borderColor: colors.border }]}>
+          <View style={styles.heroTop}>
+            <View style={[styles.heroIcon, { backgroundColor: colors.card }]}>
+              <Ionicons name="heart" size={22} color={colors.pink} />
             </View>
-            <View style={styles.pageHeaderText}>
-              <Text style={[styles.pageTitle, compact && styles.pageTitleCompact]}>Rencontres</Text>
-              <Text style={[styles.pageSubtitle, compact && styles.pageSubtitleCompact]}>
-                Des mamans près de chez vous, prêtes à échanger
+            <View style={styles.heroText}>
+              <Text style={[styles.heroTitle, { color: colors.text }]}>Rencontres</Text>
+              <Text style={[styles.heroSubtitle, { color: colors.textSecondary }]}>
+                Découvrez des mamans près de chez vous
               </Text>
             </View>
           </View>
-        </View>
-
-        <View style={[styles.filterBar, useCompactFilters && styles.filterBarCompact, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <TouchableOpacity
-            style={[styles.filterToggle, useCompactFilters && styles.filterToggleCompact]}
-            onPress={toggleFilters}
-            activeOpacity={0.85}
-            hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
-            accessibilityRole="button"
-            accessibilityState={{ expanded: filtersExpanded }}
-            accessibilityLabel={filtersExpanded ? 'Masquer les filtres' : 'Afficher les filtres'}
-          >
-            <View style={[styles.filterToggleLeft, useCompactFilters && styles.filterToggleLeftCompact]}>
-              <Ionicons name="options-outline" size={18} color={colors.pink} />
-              <Text style={[styles.filterToggleTitle, { color: colors.text }]}>
-                {filtersExpanded ? 'Masquer les filtres' : 'Filtres'}
-              </Text>
-              {!filtersExpanded && !useCompactFilters ? (
-                <Text style={[styles.filterToggleSummary, { color: colors.textMuted }]} numberOfLines={1}>
-                  {filterSummary}
-                </Text>
-              ) : null}
-            </View>
-            <View style={[styles.filterToggleRight, useCompactFilters && styles.filterToggleRightCompact]}>
-              {!filtersExpanded && !useCompactFilters ? (
-                <Text style={[styles.filterToggleCount, { color: colors.textSecondary }]} numberOfLines={1}>
-                  {countLabel}
-                </Text>
-              ) : null}
-              <Ionicons
-                name={filtersExpanded ? 'chevron-up' : 'chevron-down'}
-                size={18}
-                color={colors.textMuted}
-              />
-            </View>
-            {!filtersExpanded && useCompactFilters ? (
-              <View style={styles.filterToggleMeta}>
-                <Text style={[styles.filterToggleSummary, { color: colors.textMuted }]} numberOfLines={2}>
-                  {filterSummary}
-                </Text>
-                <Text style={[styles.filterToggleCount, { color: colors.textSecondary }]} numberOfLines={1}>
-                  {countLabel}
-                </Text>
-              </View>
-            ) : null}
-          </TouchableOpacity>
-
-          {filtersExpanded ? (
-            <View style={styles.filterPanel}>
-              <RencontreFilterChips
-                colors={colors}
-                timeFilter={timeFilter}
-                onTimeFilterChange={onTimeFilterChange}
-                countries={countries}
-                regions={regions}
-                selectedCountry={selectedCountry}
-                selectedRegion={selectedRegion}
-                onCountryChange={onCountryChange}
-                onRegionChange={onRegionChange}
-                countLabel={countLabel}
-                layout={useCompactFilters ? 'inline' : 'toolbar'}
-                wrapChips={useCompactFilters}
-              />
+          {!loading ? (
+            <View style={[styles.countBadge, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <Ionicons name="people-outline" size={14} color={colors.pink} />
+              <Text style={[styles.countBadgeText, { color: colors.text }]}>{countLabel}</Text>
             </View>
           ) : null}
         </View>
+
+        <View style={[styles.searchBar, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Ionicons name="search" size={18} color={colors.pink} />
+          <TextInput
+            style={[styles.searchInput, { color: colors.text }]}
+            placeholder="Chercher par pseudo…"
+            placeholderTextColor={colors.textMuted}
+            value={searchQuery}
+            onChangeText={onSearchQueryChange}
+            autoCapitalize="none"
+            autoCorrect={false}
+            returnKeyType="search"
+            clearButtonMode="while-editing"
+          />
+          {searchQuery.length > 0 ? (
+            <TouchableOpacity
+              onPress={() => onSearchQueryChange('')}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              accessibilityLabel="Effacer la recherche"
+            >
+              <Ionicons name="close-circle" size={18} color={colors.textMuted} />
+            </TouchableOpacity>
+          ) : null}
+        </View>
+
+        {!isSearching ? (
+          <View style={styles.toolbar}>
+            <View style={[styles.segmented, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <TouchableOpacity
+                style={[
+                  styles.segment,
+                  timeFilter === 'all' && { backgroundColor: colors.pink },
+                ]}
+                onPress={() => onTimeFilterChange('all')}
+                activeOpacity={0.85}
+              >
+                <Text
+                  style={[
+                    styles.segmentText,
+                    { color: timeFilter === 'all' ? colors.onPink : colors.textSecondary },
+                  ]}
+                >
+                  Toutes
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.segment,
+                  timeFilter === 'new' && { backgroundColor: colors.pink },
+                ]}
+                onPress={() => onTimeFilterChange('new')}
+                activeOpacity={0.85}
+              >
+                <Text
+                  style={[
+                    styles.segmentText,
+                    { color: timeFilter === 'new' ? colors.onPink : colors.textSecondary },
+                  ]}
+                >
+                  Récentes
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {hasGeoFilters ? (
+              <TouchableOpacity
+                style={[styles.filterBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
+                onPress={toggleFilters}
+                activeOpacity={0.85}
+              >
+                <Ionicons name="options-outline" size={16} color={colors.pink} />
+                <Text style={[styles.filterBtnText, { color: colors.text }]}>
+                  {filtersExpanded ? 'Masquer' : 'Lieu'}
+                </Text>
+                {(selectedCountry || selectedRegion) && !filtersExpanded ? (
+                  <View style={[styles.filterDot, { backgroundColor: colors.pink }]} />
+                ) : null}
+              </TouchableOpacity>
+            ) : null}
+          </View>
+        ) : null}
+
+        {!isSearching && filtersExpanded && hasGeoFilters ? (
+          <View style={[styles.filterPanel, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <RencontreFilterChips
+              colors={colors}
+              timeFilter={timeFilter}
+              onTimeFilterChange={onTimeFilterChange}
+              countries={countries}
+              regions={regions}
+              selectedCountry={selectedCountry}
+              selectedRegion={selectedRegion}
+              onCountryChange={onCountryChange}
+              onRegionChange={onRegionChange}
+              countLabel={countLabel}
+              layout="inline"
+              wrapChips
+              showTimeFilter={false}
+              minimal
+            />
+          </View>
+        ) : null}
+
+        {isSearching ? (
+          <Text style={[styles.searchHint, { color: colors.textMuted }]}>
+            Résultats pour « {searchQuery.trim()} »
+          </Text>
+        ) : null}
 
         <View style={styles.listSection}>
-          {!loading && displayed.length > 0 ? (
-            <Text style={[styles.listHint, { color: colors.textMuted }]}>
-              {countLabel} — {openHint} pour voir le profil complet
-            </Text>
-          ) : null}
-
           {loading ? (
             <View style={styles.centered}>
               <ActivityIndicator size="large" color={colors.pink} />
@@ -202,6 +240,7 @@ export function RencontreDesktopView({
             </View>
           ) : error ? (
             <View style={[styles.emptyCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <Ionicons name="cloud-offline-outline" size={40} color={colors.textMuted} />
               <Text style={styles.errorText}>{error}</Text>
               <TouchableOpacity style={[styles.retryBtn, { backgroundColor: colors.pink }]} onPress={onRefresh}>
                 <Text style={[styles.retryText, { color: colors.onPink }]}>Réessayer</Text>
@@ -209,161 +248,200 @@ export function RencontreDesktopView({
             </View>
           ) : displayed.length === 0 ? (
             <View style={[styles.emptyCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <Ionicons name="search-outline" size={44} color={colors.textMuted} />
+              <View style={[styles.emptyIcon, { backgroundColor: colors.pinkSoft }]}>
+                <Ionicons name="search-outline" size={32} color={colors.pink} />
+              </View>
+              <Text style={[styles.emptyTitle, { color: colors.text }]}>Aucun profil</Text>
               <Text style={[styles.emptyText, { color: colors.textMuted }]}>{emptyMessage}</Text>
             </View>
           ) : (
-            displayed.map((item) => (
-              <MamanProfileRow key={item.id} item={item} colors={colors} onPress={onPressProfile} />
-            ))
+            <View style={[styles.grid, compact && styles.gridCompact]}>
+              {displayed.map((item) => (
+                <MamanProfileRow
+                  key={item.id}
+                  item={item}
+                  colors={colors}
+                  onPress={onPressProfile}
+                  columns={compact ? 2 : gridColumns}
+                />
+              ))}
+            </View>
           )}
+
+          {!loading && !error && displayed.length > 0 && hasMore ? (
+            <TouchableOpacity
+              style={[styles.loadMoreBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
+              onPress={onLoadMore}
+              disabled={loadingMore}
+              activeOpacity={0.85}
+            >
+              {loadingMore ? (
+                <ActivityIndicator color={colors.pink} />
+              ) : (
+                <>
+                  <Text style={[styles.loadMoreText, { color: colors.text }]}>Voir plus de profils</Text>
+                  <Ionicons name="chevron-down" size={18} color={colors.pink} />
+                </>
+              )}
+            </TouchableOpacity>
+          ) : null}
         </View>
       </DesktopContent>
     </ScrollView>
   );
 }
 
-function buildStyles(c: AppColors) {
+function buildStyles(c: AppColors, compact: boolean) {
   return StyleSheet.create({
-    pageHeader: {
+    hero: {
+      marginTop: compact ? 8 : 4,
+      borderRadius: 20,
+      padding: 18,
+      gap: 14,
+      borderWidth: StyleSheet.hairlineWidth,
+      ...cardElevation(c.bg),
+    },
+    heroTop: {
       flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: 24,
-      paddingTop: 28,
-      paddingBottom: 20,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: c.border,
+      gap: 14,
     },
-    pageHeaderCompact: {
-      paddingTop: 16,
-      paddingBottom: 16,
-    },
-    pageHeaderLeft: {
-      flexDirection: 'row',
+    heroIcon: {
+      width: 48,
+      height: 48,
+      borderRadius: 16,
       alignItems: 'center',
-      gap: 16,
-      flex: 1,
+      justifyContent: 'center',
     },
-    pageHeaderText: {
+    heroText: {
       flex: 1,
       minWidth: 0,
     },
-    iconBadge: {
-      width: 52,
-      height: 52,
-      borderRadius: 14,
-      alignItems: 'center',
-      justifyContent: 'center',
-      flexShrink: 0,
-    },
-    iconBadgeCompact: {
-      width: 44,
-      height: 44,
-      borderRadius: 12,
-    },
-    pageTitle: {
-      color: c.text,
-      fontSize: 32,
-      fontWeight: '900',
-      letterSpacing: -0.6,
-    },
-    pageTitleCompact: {
+    heroTitle: {
       fontSize: 26,
+      fontWeight: '900',
+      letterSpacing: -0.5,
     },
-    pageSubtitle: {
-      color: c.textSecondary,
-      fontSize: 15,
-      marginTop: 4,
-      lineHeight: 22,
-    },
-    pageSubtitleCompact: {
+    heroSubtitle: {
       fontSize: 14,
       lineHeight: 20,
+      marginTop: 4,
     },
-    filterBar: {
-      marginTop: 20,
+    countBadge: {
+      alignSelf: 'flex-start',
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 999,
+      borderWidth: StyleSheet.hairlineWidth,
+    },
+    countBadgeText: {
+      fontSize: 13,
+      fontWeight: '700',
+    },
+    searchBar: {
+      marginTop: 14,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      borderRadius: 16,
+      borderWidth: StyleSheet.hairlineWidth,
+      paddingHorizontal: 14,
+      paddingVertical: Platform.OS === 'ios' ? 13 : 10,
+      ...cardElevation(c.bg),
+    },
+    searchInput: {
+      flex: 1,
+      fontSize: 15,
+      paddingVertical: 0,
+    },
+    toolbar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      marginTop: 12,
+    },
+    segmented: {
+      flex: 1,
+      flexDirection: 'row',
+      padding: 4,
+      borderRadius: 14,
+      borderWidth: StyleSheet.hairlineWidth,
+      gap: 4,
+    },
+    segment: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 9,
+      borderRadius: 10,
+    },
+    segmentText: {
+      fontSize: 13,
+      fontWeight: '700',
+    },
+    filterBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingHorizontal: 14,
+      paddingVertical: 11,
+      borderRadius: 14,
+      borderWidth: StyleSheet.hairlineWidth,
+    },
+    filterBtnText: {
+      fontSize: 13,
+      fontWeight: '700',
+    },
+    filterDot: {
+      width: 7,
+      height: 7,
+      borderRadius: 4,
+    },
+    filterPanel: {
+      marginTop: 10,
       borderRadius: 16,
       borderWidth: StyleSheet.hairlineWidth,
       padding: 12,
       ...cardElevation(c.bg),
     },
-    filterBarCompact: {
-      marginTop: 16,
-      padding: 10,
-    },
-    filterToggle: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: 12,
-      minHeight: 44,
-    },
-    filterToggleCompact: {
-      flexWrap: 'wrap',
-      alignItems: 'flex-start',
-    },
-    filterToggleLeft: {
-      flex: 1,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-      minWidth: 0,
-    },
-    filterToggleLeftCompact: {
-      flex: 1,
-      minWidth: '70%',
-    },
-    filterToggleTitle: {
-      fontSize: 14,
-      fontWeight: '700',
-      flexShrink: 0,
-    },
-    filterToggleSummary: {
-      flex: 1,
+    searchHint: {
+      marginTop: 12,
       fontSize: 13,
-      minWidth: 0,
-    },
-    filterToggleRight: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-      flexShrink: 0,
-      maxWidth: '42%',
-    },
-    filterToggleRightCompact: {
-      marginLeft: 'auto',
-      maxWidth: undefined,
-    },
-    filterToggleMeta: {
-      width: '100%',
-      flexDirection: 'row',
-      alignItems: 'flex-start',
-      justifyContent: 'space-between',
-      gap: 10,
-      paddingLeft: 26,
-    },
-    filterToggleCount: {
-      fontSize: 12,
       fontWeight: '600',
-      textAlign: 'right',
-      flexShrink: 0,
-    },
-    filterPanel: {
-      marginTop: 14,
-      paddingTop: 14,
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: c.border,
     },
     listSection: {
-      marginTop: 24,
+      marginTop: 18,
     },
-    listHint: {
-      fontSize: 13,
-      marginBottom: 14,
+    grid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'space-between',
+    },
+    gridCompact: {
+      gap: 0,
+    },
+    loadMoreBtn: {
+      marginTop: 8,
+      marginBottom: 8,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      paddingVertical: 14,
+      paddingHorizontal: 20,
+      borderRadius: 16,
+      borderWidth: StyleSheet.hairlineWidth,
+      ...cardElevation(c.bg),
+    },
+    loadMoreText: {
+      fontSize: 15,
+      fontWeight: '700',
     },
     centered: {
-      paddingVertical: 72,
+      paddingVertical: 64,
       alignItems: 'center',
       gap: 12,
     },
@@ -371,28 +449,40 @@ function buildStyles(c: AppColors) {
       fontSize: 14,
     },
     emptyCard: {
-      borderRadius: 16,
+      borderRadius: 20,
       borderWidth: StyleSheet.hairlineWidth,
-      padding: 48,
+      padding: 40,
       alignItems: 'center',
-      gap: 12,
+      gap: 10,
       ...cardElevation(c.bg),
+    },
+    emptyIcon: {
+      width: 64,
+      height: 64,
+      borderRadius: 32,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 4,
+    },
+    emptyTitle: {
+      fontSize: 18,
+      fontWeight: '800',
     },
     emptyText: {
       textAlign: 'center',
-      fontSize: 15,
-      lineHeight: 22,
-      maxWidth: 440,
+      fontSize: 14,
+      lineHeight: 21,
+      maxWidth: 320,
     },
     errorText: {
       color: '#ff6b6b',
       textAlign: 'center',
       fontSize: 14,
-      marginBottom: 8,
     },
     retryBtn: {
-      paddingHorizontal: 20,
-      paddingVertical: 10,
+      marginTop: 8,
+      paddingHorizontal: 22,
+      paddingVertical: 11,
       borderRadius: 999,
     },
     retryText: {

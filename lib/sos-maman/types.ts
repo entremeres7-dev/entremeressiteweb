@@ -19,6 +19,7 @@ export type SosMamanPost = {
   author_name: string;
   author_photo: string | null;
   author_tier_emoji: string | null;
+  author_country: string | null;
   replies_count: number;
   has_unread_replies: boolean;
   poll_options?: SosMamanPollOption[];
@@ -36,6 +37,7 @@ export type SosMamanReply = {
   author_name: string;
   author_photo: string | null;
   author_tier_emoji: string | null;
+  author_country: string | null;
 };
 
 export type CreateSosMamanPostInput = {

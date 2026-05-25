@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
+  Keyboard,
   Platform,
   ActivityIndicator,
   Alert,
@@ -18,12 +19,17 @@ import { Ionicons } from '@expo/vector-icons';
 import type { AppColors } from '@/constants/themes';
 import { isLightTheme } from '@/constants/themeUtils';
 import { TV_COLORS } from '@/constants/tvColors';
-import { requestShowAuthPhase } from '@/lib/onboarding/onboardingPhase';
+import { redirectToLogin } from '@/lib/auth/redirectToLogin';
 import { useTheme } from '@/context/ThemeContext';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useChat } from '@/hooks/useChat';
 import { useAuth } from '@/context/AuthContext';
 import type { ChatMessage } from '@/lib/messages/chatService';
+import {
+  formatChatDateSeparator,
+  formatMessageTime,
+  messageDayKey,
+} from '@/lib/messages/formatMessageDate';
 
 type Props = {
   peerId: string;
@@ -31,9 +37,28 @@ type Props = {
   peerPhoto?: string | null;
 };
 
-function formatTime(iso: string) {
-  const d = new Date(iso);
-  return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+type ChatListItem =
+  | { kind: 'date'; id: string; label: string }
+  | { kind: 'message'; id: string; message: ChatMessage };
+
+function buildChatListItems(messages: ChatMessage[]): ChatListItem[] {
+  const items: ChatListItem[] = [];
+  let lastDayKey = '';
+
+  for (const message of messages) {
+    const dayKey = messageDayKey(message.created_at);
+    if (dayKey !== lastDayKey) {
+      items.push({
+        kind: 'date',
+        id: `date-${dayKey}`,
+        label: formatChatDateSeparator(message.created_at),
+      });
+      lastDayKey = dayKey;
+    }
+    items.push({ kind: 'message', id: message.id, message });
+  }
+
+  return items;
 }
 
 export function ChatScreen({ peerId, peerName, peerPhoto }: Props) {
@@ -43,8 +68,35 @@ export function ChatScreen({ peerId, peerName, peerPhoto }: Props) {
   const styles = useThemedStyles(buildStyles);
   const listRef = useRef<FlatList>(null);
   const [draft, setDraft] = useState('');
+  const [keyboardInset, setKeyboardInset] = useState(0);
   const { session } = useAuth();
   const { userId, messages, loading, sending, error, send, reload } = useChat(peerId);
+  const listItems = useMemo(() => buildChatListItems(messages), [messages]);
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSub = Keyboard.addListener(showEvent, (event) => {
+      setKeyboardInset(event.endCoordinates.height);
+      setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 80);
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setKeyboardInset(0);
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
+  const inputBarPaddingBottom =
+    Platform.OS === 'android'
+      ? keyboardInset > 0
+        ? keyboardInset
+        : Math.max(insets.bottom, 12)
+      : Math.max(insets.bottom, 12);
 
   const handleSend = useCallback(async () => {
     const text = draft.trim();
@@ -57,14 +109,25 @@ export function ChatScreen({ peerId, peerName, peerPhoto }: Props) {
   }, [draft, send, sending]);
 
   const renderItem = useCallback(
-    ({ item }: { item: ChatMessage }) => {
-      const isMine = item.sender_id === userId;
+    ({ item }: { item: ChatListItem }) => {
+      if (item.kind === 'date') {
+        return (
+          <View style={styles.dateSeparatorWrap}>
+            <View style={styles.dateSeparator}>
+              <Text style={styles.dateSeparatorText}>{item.label}</Text>
+            </View>
+          </View>
+        );
+      }
+
+      const message = item.message;
+      const isMine = message.sender_id === userId;
       return (
         <View style={[styles.bubbleRow, isMine ? styles.bubbleRowMine : styles.bubbleRowTheirs]}>
           <View style={[styles.bubble, isMine ? styles.bubbleMine : styles.bubbleTheirs]}>
-            <Text style={[styles.bubbleText, isMine && styles.bubbleTextMine]}>{item.text}</Text>
+            <Text style={[styles.bubbleText, isMine && styles.bubbleTextMine]}>{message.text}</Text>
             <Text style={[styles.bubbleTime, isMine && styles.bubbleTimeMine]}>
-              {formatTime(item.created_at)}
+              {formatMessageTime(message.created_at)}
             </Text>
           </View>
         </View>
@@ -92,8 +155,7 @@ export function ChatScreen({ peerId, peerName, peerPhoto }: Props) {
         <TouchableOpacity
           style={styles.backBtn}
           onPress={() => {
-            requestShowAuthPhase();
-            router.replace('/');
+            redirectToLogin();
           }}
         >
           <Text style={styles.backBtnText}>Se connecter</Text>
@@ -106,7 +168,7 @@ export function ChatScreen({ peerId, peerName, peerPhoto }: Props) {
     <KeyboardAvoidingView
       style={styles.screen}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={0}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? insets.top : 0}
     >
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.headerBack}>
@@ -132,17 +194,20 @@ export function ChatScreen({ peerId, peerName, peerPhoto }: Props) {
 
       <FlatList
         ref={listRef}
-        data={messages}
+        style={styles.messageList}
+        data={listItems}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
-        contentContainerStyle={[styles.listContent, messages.length === 0 && styles.listEmpty]}
+        contentContainerStyle={[styles.listContent, listItems.length === 0 && styles.listEmpty]}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
         onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
         ListEmptyComponent={
           <Text style={styles.emptyChat}>Envoyez le premier message à {peerName} 💬</Text>
         }
       />
 
-      <View style={[styles.inputBar, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+      <View style={[styles.inputBar, { paddingBottom: inputBarPaddingBottom }]}>
         <TextInput
           style={styles.input}
           placeholder="Votre message…"
@@ -221,6 +286,9 @@ function buildStyles(c: AppColors) {
       fontSize: 12,
       textAlign: 'center',
     },
+    messageList: {
+      flex: 1,
+    },
     listContent: {
       padding: 16,
       paddingBottom: 8,
@@ -233,6 +301,21 @@ function buildStyles(c: AppColors) {
       color: c.textMuted,
       textAlign: 'center',
       fontSize: 15,
+    },
+    dateSeparatorWrap: {
+      alignItems: 'center',
+      marginVertical: 14,
+    },
+    dateSeparator: {
+      backgroundColor: light ? c.surface : 'rgba(255,255,255,0.08)',
+      borderRadius: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 5,
+    },
+    dateSeparatorText: {
+      color: c.textMuted,
+      fontSize: 12,
+      fontWeight: '600',
     },
     bubbleRow: {
       marginBottom: 10,

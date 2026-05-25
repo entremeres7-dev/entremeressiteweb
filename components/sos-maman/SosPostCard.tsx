@@ -1,10 +1,10 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
-import { Image } from 'expo-image';
+import { View, Text, TouchableOpacity, Pressable, StyleSheet, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { AppColors } from '@/constants/themes';
 import { cardElevation } from '@/constants/themeUtils';
 import { DisplayNameWithTier } from '@/components/gamification/DisplayNameWithTier';
+import { AvatarWithCountryFlag } from '@/components/ui/AvatarWithCountryFlag';
 import type { SosMamanPost } from '@/lib/sos-maman/types';
 import { SosPostTypeBadge } from './SosPostTypeBadge';
 import { SosPollBlock } from './SosPollBlock';
@@ -17,6 +17,7 @@ type Props = {
   variant?: 'mobile' | 'desktop';
   onPress: () => void;
   onMenu: (post: SosMamanPost) => void;
+  onPressAuthor?: (post: SosMamanPost) => void;
 };
 
 export function SosPostCard({
@@ -26,10 +27,12 @@ export function SosPostCard({
   variant = 'mobile',
   onPress,
   onMenu,
+  onPressAuthor,
 }: Props) {
   const isOwner = currentUserId === post.user_id;
   const isDesktop = variant === 'desktop';
   const styles = buildStyles(colors, isDesktop);
+  const canOpenAuthorProfile = !post.is_anonymous && !!onPressAuthor;
 
   const formattedDate = new Date(post.created_at).toLocaleDateString('fr-FR', {
     day: 'numeric',
@@ -38,12 +41,29 @@ export function SosPostCard({
     minute: '2-digit',
   });
 
-  const avatar = post.author_photo && !post.is_anonymous ? (
-    <Image source={{ uri: post.author_photo }} style={styles.avatar} contentFit="cover" />
+  const avatarSize = isDesktop ? 52 : 40;
+
+  const avatarNode = (
+    <AvatarWithCountryFlag
+      colors={colors}
+      photoUri={post.is_anonymous ? null : post.author_photo}
+      country={post.is_anonymous ? null : post.author_country}
+      size={avatarSize}
+      showFlag={!post.is_anonymous}
+    />
+  );
+
+  const avatar = canOpenAuthorProfile ? (
+    <Pressable
+      onPress={() => onPressAuthor(post)}
+      accessibilityRole="button"
+      accessibilityLabel={`Voir le profil de ${post.author_name}`}
+      style={({ pressed }) => [pressed && styles.avatarPressed]}
+    >
+      {avatarNode}
+    </Pressable>
   ) : (
-    <View style={[styles.avatar, styles.avatarPlaceholder]}>
-      <Ionicons name="heart" size={isDesktop ? 20 : 18} color={colors.pink} />
-    </View>
+    avatarNode
   );
 
   const menuButton = (
@@ -78,19 +98,16 @@ export function SosPostCard({
 
   if (isDesktop) {
     return (
-      <TouchableOpacity
+      <View
         style={[
           styles.card,
-          Platform.OS === 'web' ? ({ cursor: 'pointer' } as object) : null,
+          Platform.OS === 'web' ? ({ cursor: 'default' } as object) : null,
         ]}
-        onPress={onPress}
-        onLongPress={() => onMenu(post)}
-        activeOpacity={0.92}
       >
         {avatar}
         <View style={styles.body}>
           <View style={styles.topRow}>
-            <View style={styles.authorBlock}>
+            <TouchableOpacity style={styles.authorBlock} onPress={onPress} activeOpacity={0.9}>
               <DisplayNameWithTier
                 name={post.author_name}
                 tierEmoji={post.author_tier_emoji}
@@ -98,30 +115,32 @@ export function SosPostCard({
                 numberOfLines={1}
               />
               <Text style={styles.cardTime}>{formattedDate}</Text>
-            </View>
+            </TouchableOpacity>
             <View style={styles.topRowRight}>
               {post.has_unread_replies && isOwner ? <View style={styles.unreadDot} /> : null}
               {menuButton}
             </View>
           </View>
-          {contentBlock}
-          <View style={styles.cardFooter}>
-            <Ionicons name="chatbubble-outline" size={16} color={colors.pink} />
-            <Text style={styles.cardReplies}>
-              {post.replies_count} réponse{post.replies_count !== 1 ? 's' : ''}
-            </Text>
-            <Ionicons name="chevron-forward" size={18} color={colors.textMuted} style={styles.chevron} />
-          </View>
+          <TouchableOpacity onPress={onPress} onLongPress={() => onMenu(post)} activeOpacity={0.92}>
+            {contentBlock}
+            <View style={styles.cardFooter}>
+              <Ionicons name="chatbubble-outline" size={16} color={colors.pink} />
+              <Text style={styles.cardReplies}>
+                {post.replies_count} réponse{post.replies_count !== 1 ? 's' : ''}
+              </Text>
+              <Ionicons name="chevron-forward" size={18} color={colors.textMuted} style={styles.chevron} />
+            </View>
+          </TouchableOpacity>
         </View>
-      </TouchableOpacity>
+      </View>
     );
   }
 
   return (
     <View style={styles.card}>
       <View style={styles.cardHeader}>
+        {avatar}
         <TouchableOpacity style={styles.cardHeaderMain} onPress={onPress} activeOpacity={0.9}>
-          {avatar}
           <View style={styles.cardHeaderText}>
             <DisplayNameWithTier
               name={post.author_name}
@@ -183,17 +202,10 @@ function buildStyles(c: AppColors, isDesktop: boolean) {
     topRowRight: isDesktop ? { flexDirection: 'row', alignItems: 'center', gap: 8 } : undefined,
     authorBlock: isDesktop ? { flex: 1, minWidth: 0 } : undefined,
     cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 10, gap: 10 },
-    cardHeaderMain: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
-    avatar: isDesktop
-      ? { width: 52, height: 52, borderRadius: 26 }
-      : { width: 40, height: 40, borderRadius: 20 },
-    avatarPlaceholder: {
-      backgroundColor: c.pinkSoft,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
+    cardHeaderMain: { flex: 1 },
     cardHeaderText: { flex: 1 },
     cardHeaderRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    avatarPressed: { opacity: 0.75 },
     cardAuthor: { color: c.text, fontSize: isDesktop ? 16 : 15, fontWeight: '700' },
     cardTime: { color: c.textMuted, fontSize: isDesktop ? 12 : 11, marginTop: 2 },
     unreadDot: {

@@ -16,15 +16,12 @@ import type { AppColors } from '@/constants/themes';
 import { cardElevation } from '@/constants/themeUtils';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
-import { requestShowAuthPhase } from '@/lib/onboarding/onboardingPhase';
 import {
-  getMessagesNotificationsEnabled,
-  getPushEnabled,
-  getSosNotificationsEnabled,
-  setMessagesNotificationsEnabled,
-  setPushEnabled,
-  setSosNotificationsEnabled,
-} from '@/lib/settings/userSettings';
+  getLocalNotificationPreferences,
+  saveNotificationPreferences,
+  syncNotificationPreferencesFromServer,
+} from '@/lib/settings/notificationPreferences';
+import { deactivatePushDevice, registerPushDevice } from '@/lib/push/registerPushDevice';
 
 const APP_VERSION = Constants.expoConfig?.version ?? '3.0.23';
 import { TAB_BAR_CLEARANCE } from '@/constants/tabBarLayout';
@@ -117,28 +114,59 @@ function SettingRow({
 export function ParametresScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { profile, signOut } = useAuth();
+  const { profile, user, signOut } = useAuth();
   const { colors, isLight, toggleLightMode } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const [pushEnabled, setPushEnabledState] = useState(true);
   const [sosNotif, setSosNotif] = useState(true);
   const [messagesNotif, setMessagesNotif] = useState(true);
+  const [friendsNotif, setFriendsNotif] = useState(true);
+  const [rencontresNotif, setRencontresNotif] = useState(true);
 
   const loadPrefs = useCallback(async () => {
-    const [push, sos, msg] = await Promise.all([
-      getPushEnabled(),
-      getSosNotificationsEnabled(),
-      getMessagesNotificationsEnabled(),
-    ]);
-    setPushEnabledState(push);
-    setSosNotif(sos);
-    setMessagesNotif(msg);
-  }, []);
+    const userId = user?.id;
+    const prefs = userId
+      ? await syncNotificationPreferencesFromServer(userId).catch(() => getLocalNotificationPreferences())
+      : await getLocalNotificationPreferences();
+    setPushEnabledState(prefs.pushEnabled);
+    setSosNotif(prefs.sosEnabled);
+    setMessagesNotif(prefs.messagesEnabled);
+    setFriendsNotif(prefs.friendsEnabled);
+    setRencontresNotif(prefs.rencontresEnabled);
+  }, [user?.id]);
 
   useEffect(() => {
     loadPrefs();
   }, [loadPrefs]);
+
+  const updatePref = async (
+    patch: Partial<{
+      pushEnabled: boolean;
+      sosEnabled: boolean;
+      messagesEnabled: boolean;
+      friendsEnabled: boolean;
+      rencontresEnabled: boolean;
+    }>,
+  ) => {
+    if (!user?.id) return;
+    try {
+      const next = await saveNotificationPreferences(user.id, patch);
+      if (Object.prototype.hasOwnProperty.call(patch, 'pushEnabled')) {
+        if (next.pushEnabled) {
+          await registerPushDevice(user.id).catch(() => {});
+        } else {
+          await deactivatePushDevice(user.id).catch(() => {});
+        }
+      }
+    } catch (e) {
+      Alert.alert(
+        'Erreur',
+        e instanceof Error ? e.message : 'Impossible de sauvegarder vos préférences.',
+      );
+      loadPrefs();
+    }
+  };
 
   const handleLogout = () => {
     Alert.alert('Déconnexion', 'Voulez-vous vous déconnecter ?', [
@@ -148,8 +176,6 @@ export function ParametresScreen() {
         style: 'destructive',
         onPress: async () => {
           await signOut();
-          requestShowAuthPhase();
-          router.replace('/');
         },
       },
     ]);
@@ -221,7 +247,7 @@ export function ParametresScreen() {
               value={pushEnabled}
               onValueChange={async (v) => {
                 setPushEnabledState(v);
-                await setPushEnabled(v);
+                await updatePref({ pushEnabled: v });
               }}
               trackColor={{ false: colors.border, true: colors.pink }}
             />
@@ -230,7 +256,7 @@ export function ParametresScreen() {
         <SettingRow
           icon="heart-outline"
           label="SOS Maman"
-          subtitle="Réponses à vos publications"
+          subtitle="Quand quelqu'un répond à votre publication"
           colors={colors}
           styles={styles}
           right={
@@ -239,7 +265,25 @@ export function ParametresScreen() {
               disabled={!pushEnabled}
               onValueChange={async (v) => {
                 setSosNotif(v);
-                await setSosNotificationsEnabled(v);
+                await updatePref({ sosEnabled: v });
+              }}
+              trackColor={{ false: colors.border, true: colors.pink }}
+            />
+          }
+        />
+        <SettingRow
+          icon="people-outline"
+          label="Rencontres"
+          subtitle="Quand une maman vous contacte via Rencontres"
+          colors={colors}
+          styles={styles}
+          right={
+            <Switch
+              value={rencontresNotif}
+              disabled={!pushEnabled}
+              onValueChange={async (v) => {
+                setRencontresNotif(v);
+                await updatePref({ rencontresEnabled: v });
               }}
               trackColor={{ false: colors.border, true: colors.pink }}
             />
@@ -257,7 +301,25 @@ export function ParametresScreen() {
               disabled={!pushEnabled}
               onValueChange={async (v) => {
                 setMessagesNotif(v);
-                await setMessagesNotificationsEnabled(v);
+                await updatePref({ messagesEnabled: v });
+              }}
+              trackColor={{ false: colors.border, true: colors.pink }}
+            />
+          }
+        />
+        <SettingRow
+          icon="person-add-outline"
+          label="Demandes d'amitié"
+          subtitle="Quand votre demande est acceptée"
+          colors={colors}
+          styles={styles}
+          right={
+            <Switch
+              value={friendsNotif}
+              disabled={!pushEnabled}
+              onValueChange={async (v) => {
+                setFriendsNotif(v);
+                await updatePref({ friendsEnabled: v });
               }}
               trackColor={{ false: colors.border, true: colors.pink }}
             />

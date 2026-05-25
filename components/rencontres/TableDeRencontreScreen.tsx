@@ -1,12 +1,11 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, StyleSheet, StatusBar } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { AppColors } from '@/constants/themes';
 import { useTheme } from '@/context/ThemeContext';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
 import { useRencontreProfiles } from '@/hooks/useRencontreProfiles';
-import { useRencontreFilterOptions } from '@/hooks/useRencontreFilterOptions';
-import { isFranceCountry } from '@/lib/rencontres/frenchRegions';
+import { useProfileLocationFilters } from '@/hooks/useProfileLocationFilters';
 import type { MamanRencontre, RencontreFilter } from '@/lib/rencontres/types';
 import { RencontreProfileModal } from './RencontreProfileModal';
 import { RencontreDesktopView } from './RencontreDesktopView';
@@ -16,43 +15,30 @@ export function TableDeRencontreScreen() {
   const { colors, isLight } = useTheme();
   const styles = useThemedStyles(buildStyles);
   const [timeFilter, setTimeFilter] = useState<RencontreFilter>('all');
-  const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
-  const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
-  const { countries, regionsByCountry } = useRencontreFilterOptions();
-  const { mamans, loading, refreshing, error, refresh } = useRencontreProfiles({
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const {
+    countries,
+    regions,
+    selectedCountry,
+    selectedRegion,
+    onCountryChange,
+    onRegionChange,
+    locationFilter,
+  } = useProfileLocationFilters();
+  const { mamans, loading, loadingMore, refreshing, error, isSearching, hasMore, refresh, loadMore } =
+    useRencontreProfiles({
     timeFilter,
-    country: selectedCountry,
-    adminRegionLabel: selectedRegion,
+    ...locationFilter,
+    usernameQuery: debouncedSearch,
   });
   const [selectedProfile, setSelectedProfile] = useState<MamanRencontre | null>(null);
   const [passedIds, setPassedIds] = useState<Set<string>>(new Set());
 
-  const franceCountryName = useMemo(
-    () => countries.find((c) => isFranceCountry(c)) ?? 'France',
-    [countries],
-  );
-
-  const regions = useMemo(() => {
-    if (selectedCountry) return regionsByCountry[selectedCountry] ?? [];
-    return regionsByCountry[franceCountryName] ?? [];
-  }, [selectedCountry, regionsByCountry, franceCountryName]);
-
-  const handleCountryChange = useCallback((country: string | null) => {
-    setSelectedCountry(country);
-    setSelectedRegion(null);
-  }, []);
-
-  const handleRegionChange = useCallback(
-    (region: string | null) => {
-      setSelectedRegion(region);
-      if (region && !selectedCountry) {
-        const fr =
-          countries.find((c) => c.toLowerCase().includes('france')) ?? countries[0] ?? 'France';
-        setSelectedCountry(fr);
-      }
-    },
-    [selectedCountry, countries],
-  );
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchQuery), 350);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const displayed = useMemo(
     () => mamans.filter((m) => !passedIds.has(m.id)),
@@ -69,14 +55,15 @@ export function TableDeRencontreScreen() {
 
   const countLabel = useMemo(() => {
     if (loading) return '…';
+    const n = displayed.length;
+    if (isSearching) {
+      return `${n} résultat${n !== 1 ? 's' : ''}${hasMore ? '+' : ''}`;
+    }
     if (timeFilter === 'new') {
-      return `${displayed.length} nouvelle${displayed.length !== 1 ? 's' : ''}`;
+      return `${n} nouvelle${n !== 1 ? 's' : ''}${hasMore ? '+' : ''}`;
     }
-    if (selectedCountry || selectedRegion) {
-      return `${displayed.length} profil${displayed.length !== 1 ? 's' : ''}`;
-    }
-    return 'Des milliers de mamans';
-  }, [loading, timeFilter, displayed.length, selectedCountry, selectedRegion]);
+    return `${n} profil${n !== 1 ? 's' : ''}${hasMore ? '+' : ''}`;
+  }, [loading, isSearching, timeFilter, displayed.length, hasMore]);
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
@@ -91,14 +78,20 @@ export function TableDeRencontreScreen() {
         regions={regions}
         selectedCountry={selectedCountry}
         selectedRegion={selectedRegion}
-        onCountryChange={handleCountryChange}
-        onRegionChange={handleRegionChange}
+        onCountryChange={onCountryChange}
+        onRegionChange={onRegionChange}
         countLabel={countLabel}
+        searchQuery={searchQuery}
+        onSearchQueryChange={setSearchQuery}
+        isSearching={isSearching}
         displayed={displayed}
         loading={loading}
+        loadingMore={loadingMore}
         refreshing={refreshing}
         error={error}
+        hasMore={hasMore}
         onRefresh={refresh}
+        onLoadMore={loadMore}
         onPressProfile={handlePress}
       />
 

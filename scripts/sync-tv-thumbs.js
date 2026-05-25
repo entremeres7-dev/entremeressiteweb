@@ -38,4 +38,12 @@ for (const file of FILES) {
   console.log('OK ', file);
 }
 
+const logoSrc = path.join(__dirname, '..', 'assets', 'images', 'logo2.png');
+const logoDest = path.join(__dirname, '..', 'website', 'assets', 'logo2.png');
+if (fs.existsSync(logoSrc)) {
+  fs.mkdirSync(path.dirname(logoDest), { recursive: true });
+  fs.copyFileSync(logoSrc, logoDest);
+  console.log('OK  logo2.png -> website/assets');
+}
+
 console.log(`\n${FILES.length} affiches synchronisées.`);

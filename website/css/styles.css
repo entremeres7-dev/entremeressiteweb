@@ -66,17 +66,12 @@ button, input, select { font: inherit; }
   line-height: 1;
   gap: 0.2rem;
 }
-.logo__brand {
-  display: inline-flex;
-  align-items: center;
-  font-size: 1.35rem;
-  font-style: italic;
-}
-.logo__entre { font-weight: 300; }
-.logo__meres { font-weight: 700; color: var(--pink); }
-.logo__badge {
-  background: var(--pink); color: #fff; font-style: normal; font-weight: 700;
-  font-size: 0.62em; padding: 0.15em 0.45em; border-radius: 4px; margin-left: 0.35em;
+.logo__image {
+  display: block;
+  height: 40px;
+  width: auto;
+  max-width: min(220px, 46vw);
+  object-fit: contain;
 }
 .logo__tagline {
   font-size: 0.62rem;

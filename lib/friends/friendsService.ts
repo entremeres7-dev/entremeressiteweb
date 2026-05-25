@@ -1,6 +1,11 @@
 import { supabase } from '@/supabaseClient';
 import { awardFriendAdded } from '@/lib/gamification/gamificationService';
 import { globalEvents, EVENT_TYPES } from '@/events';
+import {
+  pushNotifyFriendAccepted,
+  pushNotifyFriendRequest,
+  pushNotifyRencontreFriendRequest,
+} from '@/lib/notifications/pushNotify';
 import type { FriendListItem, FriendsLists, FriendRelationKind } from './types';
 
 type FriendRow = {
@@ -100,7 +105,11 @@ export async function getFriendRelationWith(
   return null;
 }
 
-export async function sendFriendRequest(userId: string, friendId: string): Promise<void> {
+export async function sendFriendRequest(
+  userId: string,
+  friendId: string,
+  options?: { fromRencontres?: boolean },
+): Promise<void> {
   if (userId === friendId) throw new Error('Vous ne pouvez pas vous ajouter vous-même.');
 
   const { data: existing } = await supabase
@@ -116,12 +125,24 @@ export async function sendFriendRequest(userId: string, friendId: string): Promi
     throw new Error('Une demande existe déjà entre vous.');
   }
 
-  const { error } = await supabase.from('friends').insert({
-    user_id: userId,
-    friend_id: friendId,
-    status: 'pending',
-  });
+  const { data: created, error } = await supabase
+    .from('friends')
+    .insert({
+      user_id: userId,
+      friend_id: friendId,
+      status: 'pending',
+    })
+    .select('id')
+    .single();
   if (error) throw error;
+
+  if (created?.id) {
+    if (options?.fromRencontres) {
+      void pushNotifyRencontreFriendRequest(friendId, userId, created.id);
+    } else {
+      void pushNotifyFriendRequest(friendId, userId, created.id);
+    }
+  }
 }
 
 export async function acceptFriendRequest(friendshipId: string, userId: string): Promise<void> {
@@ -143,6 +164,8 @@ export async function acceptFriendRequest(friendshipId: string, userId: string):
     .eq('friend_id', userId)
     .eq('status', 'pending');
   if (error) throw error;
+
+  void pushNotifyFriendAccepted(row.user_id, userId);
 
   const ref = friendshipId;
   await Promise.all([
